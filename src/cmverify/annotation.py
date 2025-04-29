@@ -95,6 +95,9 @@ def calculate_cell_type_fractions(adata, model_name, donor_obs_column):
         .size()
         .unstack(fill_value=0)  # Converts to a wide format with labels as columns
     )
+    
+    # Capture the donor IDs before resetting the index
+    donor_ids = fractions_df.index.get_level_values(donor_obs_column).tolist()
 
     # Normalize the values to get fractions
     fractions_df = fractions_df.div(fractions_df.sum(axis=1), axis=0).reset_index()
@@ -118,4 +121,4 @@ def calculate_cell_type_fractions(adata, model_name, donor_obs_column):
     fractions_df = fractions_df[EXPECTED_COLUMNS]
     
     # Return the calculated fractions
-    return fractions_df
+    return fractions_df, donor_ids
