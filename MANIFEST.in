@@ -1,0 +1,1 @@
+include src/cmverify/models/*.pkl
