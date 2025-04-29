@@ -2,6 +2,7 @@
 import pkg_resources
 import pickle
 import os
+import joblib
 
 def load_model(model_name):
     """
@@ -18,7 +19,9 @@ def load_model(model_name):
         The loaded model.
     """
     model_files = {
-        'AIFI_L3': 'models/ref_pbmc_clean_celltypist_model_AIFI_L3_2024-04-19_jl.pkl'
+        'rf_best_estimator': 'models/AIFI_rf_best_estimator.pkl',
+        'rf_model': 'models/AIFI_rf_model.pkl',
+        'rf_scaler': 'models/rf_scaler.pkl'
     }
 
     model_file = model_files.get(model_name)
@@ -33,8 +36,7 @@ def load_model(model_name):
     if not os.path.exists(model_path):
         raise ValueError(f"Model file {model_path} not found.")
     
-    with open(model_path, 'rb') as f:
-        model = pickle.load(f)
+    # Load the model using joblib
+    model = joblib.load(model_path)
     
     return model
-
