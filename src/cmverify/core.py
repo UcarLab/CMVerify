@@ -23,8 +23,20 @@ def load_models():
     # Return the models and scaler so they can be used in analysis
     return rf_best_model, rf_model, scaler
 
-def cmv_predict(adata,donor_obs_column):
-    """Normalize to 10k, apply log1p, and load the model."""
+def cmv_predict(adata,donor_obs_column, longitudinal_obs_column=None):
+    """Normalize to 10k, apply log1p, load the models, annotate and predict."""
+    # Confirm required parameters
+    if donor_obs_column not in adata.obs.columns:
+        raise ValueError(f"{donor_obs_column} is not a valid column in adata.obs.")
+
+    # Optional long_pred
+    long_pred = False
+    if longitudinal_obs_column:
+        if longitudinal_obs_column not in adata.obs.columns:
+            raise ValueError(f"{longitudinal_obs_column} is not a valid column in adata.obs.")
+        long_pred = True
+    else:
+        long_pred = False
     
     # Normalize the data to 10k reads per cell
     print("Checking if normalizing the data to 10k reads per cell is needed...", flush=True)
