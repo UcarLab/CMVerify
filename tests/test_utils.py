@@ -56,7 +56,7 @@ def test_log1p_if_needed():
 
 def test_load_model_valid():
     # Test valid model loading
-    model_name = 'AIFI_L3'
+    model_name = 'rf_model'
     model = load_model(model_name)
     
     # Check if model is loaded correctly (you can check the type or other properties)

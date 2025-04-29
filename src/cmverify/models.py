@@ -1,6 +1,4 @@
 # src/cmverify/models.py
-import pkg_resources
-import pickle
 import os
 import joblib
 

@@ -4,9 +4,12 @@ from .utils import normalize_total_10k, log1p_if_needed
 from .annotation import annotate_with_model, check_and_add_labels, calculate_cell_type_fractions
 from .models import load_model
 import pandas as pd
-from IPython.display import display
 from sklearn.preprocessing import StandardScaler  # For scaling the fractions data
 from sklearn.ensemble import RandomForestClassifier  # For the RandomForest model
+try:
+    from IPython.display import display  # Try importing display for Jupyter environments
+except ImportError:
+    display = print  # Use print as fallback in non-IPython environments
 
 def load_models():
     """Load the models and scaler for use in predictions."""
@@ -56,7 +59,7 @@ def cmv_predict(adata,donor_obs_column):
     fractions_df_scaled = scaler.transform(fractions_df)
     
     # Get the predictions (CMV status)
-    print("Making predictions using the CMVerify...", flush=True)
+    print("Making predictions using the CMVerify model...", flush=True)
     cmv_pred = rf_best_model.predict(fractions_df_scaled)
 
     # Get the predicted probabilities for CMV status
@@ -69,8 +72,8 @@ def cmv_predict(adata,donor_obs_column):
         results.append({
             'donor_id': donor_id,
             'prediction': pred,
-            'probability': prob
+            'probability': round(prob,3)
         })
-
+    print(results)
     print("All done. Thank you!", flush=True)
     return results
