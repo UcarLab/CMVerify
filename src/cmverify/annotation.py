@@ -3,7 +3,6 @@ import celltypist
 import pandas as pd
 import os
 from .config import EXPECTED_COLUMNS
-import warnings
 
 def annotate_with_model(adata, model_name):
     """
@@ -23,7 +22,6 @@ def annotate_with_model(adata, model_name):
 
     # Define the columns for predictions and scores
     label_column = f'{model_name}_prediction'
-    #score_column = f'{model_name}_score'
 
     #resolve the path to the model
     model_file = 'models/ref_pbmc_clean_celltypist_model_AIFI_L3_2024-04-19.pkl'
@@ -35,15 +33,6 @@ def annotate_with_model(adata, model_name):
     # Extract the predicted labels and rename the column
     labels = predictions.predicted_labels
     labels = labels.rename({'predicted_labels': label_column}, axis=1)
-
-    # Extract the probability matrix and compute the prediction scores
-    #prob = predictions.probability_matrix
-    #prob_scores = []
-    #for i in range(labels.shape[0]):
-    #    prob_scores.append(prob.loc[labels.index.to_list()[i], labels[label_column][i]])
-
-    # Add the probability scores to the labels dataframe
-    #labels[score_column] = prob_scores
 
     # Store the results in the label_results dictionary
     label_results[model_name] = labels
@@ -68,7 +57,6 @@ def check_and_add_labels(adata, label_results, model_name):
     label_df = label_results[model_name]  # Since we have only one model
 
     label_column = f'{model_name}_prediction'
-    #score_column = f'{model_name}_score'
     
     # Print a summary of the predicted labels
     label_summary = label_df[label_column].value_counts()
@@ -83,7 +71,6 @@ def check_and_add_labels(adata, label_results, model_name):
 
     # Add the predicted labels and score to adata.obs
     adata.obs[label_column] = label_df[label_column]
-    #adata.obs[score_column] = label_df[score_column]
 
 def calculate_cell_type_fractions(adata, model_name, donor_obs_column):
     """
@@ -125,9 +112,7 @@ def calculate_cell_type_fractions(adata, model_name, donor_obs_column):
             
     # If there are missing columns, issue a warning
     if missing_columns:
-        warning_message = f"Warning: The following cell types were not detected and have been initialized with zeroes: {', '.join(missing_columns)}"
-        warnings.warn(warning_message, UserWarning)
-        print(f"Missing cell types: {', '.join(missing_columns)}")
+        print(f"The following cell types were not detected and have been initialized with zeroes: {', '.join(missing_columns)}")
 
     # Ensure the columns are in the expected order
     fractions_df = fractions_df[EXPECTED_COLUMNS]
