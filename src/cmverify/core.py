@@ -22,7 +22,7 @@ def load_models():
     # Return the models and scaler so they can be used in analysis
     return rf_best_model, scaler
 
-def cmv_predict(adata,donor_obs_column, longitudinal_obs_column=None):
+def cmv_predict(adata,donor_obs_column, longitudinal_obs_column=None, verbose = False, visualize = False):
     """Normalize to 10k, apply log1p, load the models, annotate and predict."""
     # Confirm required parameters
     if donor_obs_column not in adata.obs.columns:
@@ -60,8 +60,9 @@ def cmv_predict(adata,donor_obs_column, longitudinal_obs_column=None):
     fractions_df, donor_ids = calculate_cell_type_fractions(adata, model_name, donor_obs_column,longitudinal_obs_column)
     
     # Display the calculated fractions
-    print(f"Displaying first 5 rows of donor level peripheral blood mononuclear cell composition:", flush=True)
-    display(fractions_df.head().style.hide(axis='index'))
+    if verbose:
+        print(f"Displaying first 5 rows of donor level peripheral blood mononuclear cell composition:", flush=True)
+        display(fractions_df.head().style.hide(axis='index'))
 
     # Load models and scaler
     rf_best_model, scaler = load_models()
@@ -86,6 +87,13 @@ def cmv_predict(adata,donor_obs_column, longitudinal_obs_column=None):
             'prediction': pred,
             'probability': round(prob,3)
         })
-    print(results)
+
+    if verbose:
+        print("Outputting predictions", flush=True)
+        print(results)
+
+    if visualize:
+        print("Generating visualization", flush=True)
+    
     print("All done. Thank you!", flush=True)
     return results
