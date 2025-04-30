@@ -98,6 +98,7 @@ def calculate_cell_type_fractions(adata, model_name, donor_obs_column, longitudi
             .unstack(fill_value=0)  # Converts to a wide format with labels as columns
         )
         # Capture the donor IDs before resetting the index
+        fractions_df = fractions_df[(fractions_df.sum(axis=1) > 0)]
         donor_ids_partial = fractions_df.index.get_level_values(donor_obs_column).tolist()
         visit_ids = fractions_df.index.get_level_values(longitudinal_obs_column).tolist()
         donor_ids = list(zip(donor_ids_partial, visit_ids))
@@ -109,6 +110,7 @@ def calculate_cell_type_fractions(adata, model_name, donor_obs_column, longitudi
             .size()
             .unstack(fill_value=0)  # Converts to a wide format with labels as columns
         )
+        fractions_df = fractions_df[(fractions_df.sum(axis=1) > 0)]
         # Capture the donor IDs before resetting the index
         donor_ids = fractions_df.index.get_level_values(donor_obs_column).tolist()
     
