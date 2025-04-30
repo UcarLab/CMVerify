@@ -33,7 +33,8 @@ def cmv_predict(adata,donor_obs_column, longitudinal_obs_column=None):
     if longitudinal_obs_column:
         if longitudinal_obs_column not in adata.obs.columns:
             raise ValueError(f"{longitudinal_obs_column} is not a valid column in adata.obs.")
-        long_pred = True
+        else:
+            long_pred = True
     else:
         long_pred = False
     
@@ -56,7 +57,7 @@ def cmv_predict(adata,donor_obs_column, longitudinal_obs_column=None):
 
     # Calculate the fraction of cells for each label per patient (person)
     print(f"Calculating the fraction of cells for each label per donor...", flush=True)
-    fractions_df, donor_ids = calculate_cell_type_fractions(adata, model_name, donor_obs_column)
+    fractions_df, donor_ids = calculate_cell_type_fractions(adata, model_name, donor_obs_column,longitudinal_obs_column)
     
     # Display the calculated fractions
     print(f"Displaying first 5 rows of donor level peripheral blood mononuclear cell composition:", flush=True)

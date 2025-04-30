@@ -72,7 +72,7 @@ def check_and_add_labels(adata, label_results, model_name):
     # Add the predicted labels and score to adata.obs
     adata.obs[label_column] = label_df[label_column]
 
-def calculate_cell_type_fractions(adata, model_name, donor_obs_column):
+def calculate_cell_type_fractions(adata, model_name, donor_obs_column, longitudinal_obs_column=None):
     """
     Calculate the fraction of cells for each label per patient (person).
     
@@ -87,18 +87,31 @@ def calculate_cell_type_fractions(adata, model_name, donor_obs_column):
     """
     # Extract relevant columns from `adata.obs` to a dataframe
     label_column = f'{model_name}_prediction'
-    obs_df = adata.obs[[donor_obs_column, label_column]]
 
-    # Calculate the fraction of cells for each label per patient
-    fractions_df = (
-        obs_df.groupby([donor_obs_column, label_column])
-        .size()
-        .unstack(fill_value=0)  # Converts to a wide format with labels as columns
-    )
+    # modularizing to allow longitudinal prediction
+    if longitudinal_obs_column is not None:
+        obs_df = adata.obs[[donor_obs_column, longitudinal_obs_column,label_column]]
+        # Calculate the fraction of cells for each label per patient per timepoint
+        fractions_df = (
+            obs_df.groupby([donor_obs_column, longitudinal_obs_column, label_column])
+            .size()
+            .unstack(fill_value=0)  # Converts to a wide format with labels as columns
+        )
+        # Capture the donor IDs before resetting the index
+        donor_ids_partial = fractions_df.index.get_level_values(donor_obs_column).tolist()
+        visit_ids = fractions_df.index.get_level_values(longitudinal_obs_column).tolist()
+        donor_ids = list(zip(donor_ids_partial, visit_ids))
+    else:
+        obs_df = adata.obs[[donor_obs_column, label_column]]
+        # Calculate the fraction of cells for each label per patient
+        fractions_df = (
+            obs_df.groupby([donor_obs_column, label_column])
+            .size()
+            .unstack(fill_value=0)  # Converts to a wide format with labels as columns
+        )
+        # Capture the donor IDs before resetting the index
+        donor_ids = fractions_df.index.get_level_values(donor_obs_column).tolist()
     
-    # Capture the donor IDs before resetting the index
-    donor_ids = fractions_df.index.get_level_values(donor_obs_column).tolist()
-
     # Normalize the values to get fractions
     fractions_df = fractions_df.div(fractions_df.sum(axis=1), axis=0).reset_index()
 
