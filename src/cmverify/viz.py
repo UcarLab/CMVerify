@@ -37,30 +37,40 @@ def plot_longitudinal_predictions(results, visit_order=None):
         linewidth=0.1,
         palette=["black"]
     )
-
-    # Draw lines per donor
-    for donor_id in df['Donor_id'].unique():
-        donor_data = df[df['Donor_id'] == donor_id]
-        # Filter out rows where 'cohort_timepoint' or 'col' is NaN
-        donor_data = donor_data.dropna(subset=['Visit', 'probability'])
-        # Plot the line if there is data for at least two timepoints
-        if len(donor_data) > 1:
-            sorted_cat = (donor_data['Visit'].cat.codes).sort_values()
-            c='black'
-            width = 0.2
-            plt.plot(sorted_cat, donor_data['probability'].loc[sorted_cat.index], 
-                     linestyle='--', linewidth=width, color=c, alpha=0.5,marker='')  # Adjust alpha for transparency
-            last_x = sorted_cat.index[-1]
-            last_y = donor_data['probability'].loc[sorted_cat.index[-1]]
-            plt.text(sorted_cat.iloc[-1]+.1, last_y, str(donor_id), 
-                    fontsize=6, verticalalignment='center', 
-                    horizontalalignment='left')
+    if visit_order:
+        # Draw lines per donor
+        for donor_id in df['Donor_id'].unique():
+            donor_data = df[df['Donor_id'] == donor_id]
+            # Filter out rows where 'cohort_timepoint' or 'col' is NaN
+            donor_data = donor_data.dropna(subset=['Visit', 'probability'])
+            # Plot the line if there is data for at least two timepoints
+            if len(donor_data) > 1:
+                sorted_cat = (donor_data['Visit'].cat.codes).sort_values()
+                c='black'
+                width = 0.2
+                plt.plot(sorted_cat, donor_data['probability'].loc[sorted_cat.index], 
+                         linestyle='--', linewidth=width, color=c, alpha=0.5,marker='')  # Adjust alpha for transparency
+                last_x = sorted_cat.index[-1]
+                last_y = donor_data['probability'].loc[sorted_cat.index[-1]]
+                plt.text(sorted_cat.iloc[-1]+.1, last_y, str(donor_id), 
+                        fontsize=6, verticalalignment='center', 
+                        horizontalalignment='left')
+    else: 
+        for donor_id in df['Donor_id'].unique():
+            donor_data = df[df['Donor_id'] == donor_id]
+            last_y = donor_data['probability'].iloc[-1]
+            plt.text(0.1, last_y, str(donor_id), 
+                        fontsize=6, verticalalignment='center', 
+                        horizontalalignment='left')
 
 
     # Final formatting
     plt.xlabel('Timepoint')
     plt.ylabel('Model Prediction')
     plt.xticks(fontsize=6)
-    plt.axhline(y=0.5, color='red', lw=0.5, linestyle='--')
+    # Add the decision threshold line
+    threshold_line = plt.axhline(y=0.5, color='red', lw=0.5, linestyle='--')
+    # Add a legend for the threshold
+    plt.legend([threshold_line], ['Decision Threshold'], loc='best', fontsize=8)
     plt.tight_layout()
     plt.show()

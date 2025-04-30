@@ -31,6 +31,8 @@ def predict(adata,donor_obs_column, longitudinal_obs_column=None, verbose = Fals
 
     # Optional long_pred
     long_pred = False
+    longitudinal_var = None
+    visit_order = None
     if longitudinal_obs_column:
         if isinstance(longitudinal_obs_column, list):
             # e.g., ['Visit', ['Baseline', 'Day 1', 'Day 7']]
