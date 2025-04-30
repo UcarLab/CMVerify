@@ -15,15 +15,15 @@ def plot_longitudinal_predictions(results, visit_order=None):
     # Convert list of dicts to DataFrame
     df = pd.DataFrame(results)
 
-    # Split donor_id tuple
-    df['Donor_id'] = df['donor_id'].apply(lambda x: x[0])
-    df['Visit'] = df['donor_id'].apply(lambda x: x[1])
-
     # Ensure Visit is a properly ordered categorical variable
     if visit_order:
+        # Split donor_id tuple
+        df['Donor_id'] = df['donor_id'].apply(lambda x: x[0])
+        df['Visit'] = df['donor_id'].apply(lambda x: x[1])
         df['Visit'] = pd.Categorical(df['Visit'], categories=visit_order, ordered=True)
     else:
-        df['Visit'] = pd.Categorical(df['Visit'], categories=sorted(df['Visit'].unique()), ordered=True)
+        df['Visit'] = 'Baseline'
+        df['Visit'] = pd.Categorical(df['Visit'], categories=['Baseline'], ordered=True)
 
     # Plotting
     plt.figure(figsize=(8, 3), dpi=100)
@@ -56,9 +56,12 @@ def plot_longitudinal_predictions(results, visit_order=None):
                         fontsize=6, verticalalignment='center', 
                         horizontalalignment='left')
     else: 
-        for donor_id in df['Donor_id'].unique():
-            donor_data = df[df['Donor_id'] == donor_id]
+        for donor_id in df['donor_id'].unique():
+            print(donor_id)
+            donor_data = df[df['donor_id'] == donor_id]
+            print(donor_data)
             last_y = donor_data['probability'].iloc[-1]
+            print(last_y)
             plt.text(0.1, last_y, str(donor_id), 
                         fontsize=6, verticalalignment='center', 
                         horizontalalignment='left')
