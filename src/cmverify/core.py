@@ -17,11 +17,10 @@ def load_models():
 
     # Load the models and scaler
     rf_best_model = load_model('rf_best_estimator')
-    rf_model = load_model('rf_model')
     scaler = load_model('rf_scaler')
 
     # Return the models and scaler so they can be used in analysis
-    return rf_best_model, rf_model, scaler
+    return rf_best_model, scaler
 
 def cmv_predict(adata,donor_obs_column, longitudinal_obs_column=None):
     """Normalize to 10k, apply log1p, load the models, annotate and predict."""
@@ -64,7 +63,7 @@ def cmv_predict(adata,donor_obs_column, longitudinal_obs_column=None):
     display(fractions_df.head().style.hide(axis='index'))
 
     # Load models and scaler
-    rf_best_model, rf_model, scaler = load_models()
+    rf_best_model, scaler = load_models()
 
     # Scale the fractions data using the pre-loaded scaler
     print("Scaling the calculated fractions...", flush=True)
