@@ -19,7 +19,7 @@ def load_models(verbose):
     # Return the models and scaler so they can be used in analysis
     return rf_best_model, scaler
 
-def predict(adata,donor_obs_column, longitudinal_obs_column=None, verbose = 1):
+def predict(adata,donor_obs_column, longitudinal_obs_column=None, verbose = 1,return_frac=False):
     """Normalize to 10k, apply log1p, load the models, annotate and predict."""
     # Confirm required parameters
     if donor_obs_column not in adata.obs.columns:
@@ -95,4 +95,8 @@ def predict(adata,donor_obs_column, longitudinal_obs_column=None, verbose = 1):
         print("Outputting predictions", flush=True)
         print(results)
         print("All done. Thank you!", flush=True)
-    return results, fractions_df
+
+    if return_frac:
+        return results, fractions_df
+    else:
+        return results
