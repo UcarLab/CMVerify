@@ -1,6 +1,5 @@
 # src/CMVerify/annotation.py
 import celltypist
-import pandas as pd
 import os
 from .config import EXPECTED_COLUMNS
 
@@ -97,11 +96,6 @@ def calculate_cell_type_fractions(adata, model_name, donor_obs_column, longitudi
             .size()
             .unstack(fill_value=0)  # Converts to a wide format with labels as columns
         )
-        # Capture the donor IDs before resetting the index
-        fractions_df = fractions_df[(fractions_df.sum(axis=1) > 0)]
-        donor_ids_partial = fractions_df.index.get_level_values(donor_obs_column).tolist()
-        visit_ids = fractions_df.index.get_level_values(longitudinal_obs_column).tolist()
-        donor_ids = list(zip(donor_ids_partial, visit_ids))
     else:
         obs_df = adata.obs[[donor_obs_column, label_column]]
         # Calculate the fraction of cells for each label per patient
@@ -110,9 +104,14 @@ def calculate_cell_type_fractions(adata, model_name, donor_obs_column, longitudi
             .size()
             .unstack(fill_value=0)  # Converts to a wide format with labels as columns
         )
-        fractions_df = fractions_df[(fractions_df.sum(axis=1) > 0)]
-        # Capture the donor IDs before resetting the index
-        donor_ids = fractions_df.index.get_level_values(donor_obs_column).tolist()
+    # Capture the donor IDs before resetting the index
+    fractions_df = fractions_df[(fractions_df.sum(axis=1) > 0)]
+    donor_ids_partial = fractions_df.index.get_level_values(donor_obs_column).tolist()
+    if longitudinal_obs_column is not None:
+        visit_ids = fractions_df.index.get_level_values(longitudinal_obs_column).tolist()
+        donor_ids = list(zip(donor_ids_partial, visit_ids))
+    else:
+        donor_ids = [(donor_id, "Baseline") for donor_id in donor_ids_partial]
     
     # Normalize the values to get fractions
     fractions_df = fractions_df.div(fractions_df.sum(axis=1), axis=0).reset_index()

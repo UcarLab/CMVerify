@@ -1,12 +1,7 @@
 # src/CMVerify/core.py
-import scanpy as sc
 from .utils import normalize_total_10k, log1p_if_needed
 from .annotation import annotate_with_model, check_and_add_labels, calculate_cell_type_fractions
 from .models import load_model
-from .viz import plot_longitudinal_predictions
-import pandas as pd
-from sklearn.preprocessing import StandardScaler  # For scaling the fractions data
-from sklearn.ensemble import RandomForestClassifier  # For the RandomForest model
 try:
     from IPython.display import display  # Try importing display for Jupyter environments
 except ImportError:
@@ -23,35 +18,11 @@ def load_models():
     # Return the models and scaler so they can be used in analysis
     return rf_best_model, scaler
 
-def predict(adata,donor_obs_column, longitudinal_obs_column=None, verbose = False, visualize = False):
+def predict(adata,donor_obs_column, longitudinal_obs_column=None, verbose = False):
     """Normalize to 10k, apply log1p, load the models, annotate and predict."""
     # Confirm required parameters
     if donor_obs_column not in adata.obs.columns:
         raise ValueError(f"{donor_obs_column} is not a valid column in adata.obs.")
-
-    # Optional long_pred
-    long_pred = False
-    longitudinal_var = None
-    visit_order = None
-    if longitudinal_obs_column:
-        if isinstance(longitudinal_obs_column, list):
-            # e.g., ['Visit', ['Baseline', 'Day 1', 'Day 7']]
-            longitudinal_var = longitudinal_obs_column[0]
-            visit_order = longitudinal_obs_column[1]
-        elif isinstance(longitudinal_obs_column, str):
-            longitudinal_var = longitudinal_obs_column
-            visit_order = None
-        else:
-            longitudinal_var = None
-            visit_order = None
-        if longitudinal_var not in adata.obs.columns:
-            raise ValueError(f"{longitudinal_var} is not a valid column in adata.obs.")
-        else:
-            long_pred = True
-        
-
-    else:
-        long_pred = False
     
     # Normalize the data to 10k reads per cell
     print("Checking if normalizing the data to 10k reads per cell is needed...", flush=True)
@@ -72,7 +43,7 @@ def predict(adata,donor_obs_column, longitudinal_obs_column=None, verbose = Fals
 
     # Calculate the fraction of cells for each label per patient (person)
     print(f"Calculating the fraction of cells for each label per donor...", flush=True)
-    fractions_df, donor_ids = calculate_cell_type_fractions(adata, model_name, donor_obs_column, longitudinal_var)
+    fractions_df, donor_ids = calculate_cell_type_fractions(adata, model_name, donor_obs_column, longitudinal_obs_column)
     
     # Display the calculated fractions
     if verbose:
@@ -98,7 +69,7 @@ def predict(adata,donor_obs_column, longitudinal_obs_column=None, verbose = Fals
     results = []
     for donor_id, pred, prob in zip(donor_ids, cmv_pred, cmv_pred_probs):
         results.append({
-            'donor_id': donor_id,
+            'donor_id_timepoint': donor_id,
             'prediction': pred,
             'probability': round(prob,3)
         })
@@ -106,10 +77,6 @@ def predict(adata,donor_obs_column, longitudinal_obs_column=None, verbose = Fals
     if verbose:
         print("Outputting predictions", flush=True)
         print(results)
-
-    if visualize:
-        print("Generating visualization", flush=True)
-        plot_longitudinal_predictions(results, visit_order)
-    
+        
     print("All done. Thank you!", flush=True)
     return results

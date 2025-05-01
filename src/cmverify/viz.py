@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-def plot_longitudinal_predictions(results, visit_order=None):
+def visualize(results, visit_order=None):
     """
     Plot longitudinal prediction probabilities per donor over visits.
 
@@ -12,18 +12,17 @@ def plot_longitudinal_predictions(results, visit_order=None):
             - 'donor_id': a tuple (donor_id, visit)
             - 'probability': model-predicted probability
     """
+    print("Generating visualization", flush=True)
     # Convert list of dicts to DataFrame
     df = pd.DataFrame(results)
 
-    # Ensure Visit is a properly ordered categorical variable
-    if visit_order:
-        # Split donor_id tuple
-        df['Donor_id'] = df['donor_id'].apply(lambda x: x[0])
-        df['Visit'] = df['donor_id'].apply(lambda x: x[1])
-        df['Visit'] = pd.Categorical(df['Visit'], categories=visit_order, ordered=True)
+    df['Donor_id'] = df['donor_id_timepoint'].apply(lambda x: x[0])
+    df['Visit'] = df['donor_id_timepoint'].apply(lambda x: x[1])
+
+    if visit_order is None:
+        df['Visit'] = pd.Categorical(df['Visit'], categories=df['Visit'].unique(), ordered=True)
     else:
-        df['Visit'] = 'Baseline'
-        df['Visit'] = pd.Categorical(df['Visit'], categories=['Baseline'], ordered=True)
+        df['Visit'] = pd.Categorical(df['Visit'], categories=visit_order, ordered=True)
 
     # Plotting
     plt.figure(figsize=(8, 3), dpi=100)
@@ -37,35 +36,23 @@ def plot_longitudinal_predictions(results, visit_order=None):
         linewidth=0.1,
         palette=["black"]
     )
-    if visit_order:
-        # Draw lines per donor
-        for donor_id in df['Donor_id'].unique():
-            donor_data = df[df['Donor_id'] == donor_id]
-            # Filter out rows where 'cohort_timepoint' or 'col' is NaN
-            donor_data = donor_data.dropna(subset=['Visit', 'probability'])
-            # Plot the line if there is data for at least two timepoints
-            if len(donor_data) > 1:
-                sorted_cat = (donor_data['Visit'].cat.codes).sort_values()
-                c='black'
-                width = 0.2
-                plt.plot(sorted_cat, donor_data['probability'].loc[sorted_cat.index], 
-                         linestyle='--', linewidth=width, color=c, alpha=0.5,marker='')  # Adjust alpha for transparency
-                last_x = sorted_cat.index[-1]
-                last_y = donor_data['probability'].loc[sorted_cat.index[-1]]
-                plt.text(sorted_cat.iloc[-1]+.1, last_y, str(donor_id), 
-                        fontsize=6, verticalalignment='center', 
-                        horizontalalignment='left')
-    else: 
-        for donor_id in df['donor_id'].unique():
-            print(donor_id)
-            donor_data = df[df['donor_id'] == donor_id]
-            print(donor_data)
-            last_y = donor_data['probability'].iloc[-1]
-            print(last_y)
-            plt.text(0.1, last_y, str(donor_id), 
-                        fontsize=6, verticalalignment='center', 
-                        horizontalalignment='left')
 
+    for donor_id in df['Donor_id'].unique():
+        donor_data = df[df['Donor_id'] == donor_id]
+        # Filter out rows where 'cohort_timepoint' or 'col' is NaN
+        donor_data = donor_data.dropna(subset=['Visit', 'probability'])
+        # Plot the line if there is data for at least two timepoints
+        if len(donor_data) > 1:
+            sorted_cat = (donor_data['Visit'].cat.codes).sort_values()
+            c='black'
+            width = 0.2
+            plt.plot(sorted_cat, donor_data['probability'].loc[sorted_cat.index], 
+                     linestyle='--', linewidth=width, color=c, alpha=0.5,marker='')  # Adjust alpha for transparency
+            last_x = sorted_cat.index[-1]
+            last_y = donor_data['probability'].loc[sorted_cat.index[-1]]
+            plt.text(sorted_cat.iloc[-1]+.1, last_y, str(donor_id), 
+                    fontsize=6, verticalalignment='center', 
+                    horizontalalignment='left')
 
     # Final formatting
     plt.xlabel('Timepoint')

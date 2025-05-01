@@ -1,8 +1,5 @@
 # src/cmverify/utils.py
-import anndata
 import scanpy as sc
-import numpy as np
-import warnings
 
 def normalize_total_10k(adata):
     """
