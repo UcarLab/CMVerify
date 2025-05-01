@@ -90,6 +90,8 @@ def calculate_cell_type_fractions(adata, model_name, donor_obs_column, longitudi
 
     # modularizing to allow longitudinal prediction
     if longitudinal_obs_column is not None:
+        if longitudinal_obs_column not in adata.obs.columns:
+            raise ValueError(f"{longitudinal_obs_column} is not a valid column in adata.obs.")
         obs_df = adata.obs[[donor_obs_column, longitudinal_obs_column,label_column]]
         # Calculate the fraction of cells for each label per patient per timepoint
         fractions_df = (
@@ -122,8 +124,8 @@ def calculate_cell_type_fractions(adata, model_name, donor_obs_column, longitudi
             total_visits = visits_per_donor.sum()
         
             for visit_count, num_donors in donor_visit_counts.items():
-                print(f"{num_donors} donors had {visit_count} visit{'s' if visit_count > 1 else ''}.", flush=True)
-            print(f"For a total of {total_visits} donor visits.", flush=True)
+                print(f"{num_donors} donors had {visit_count} sample{'s' if visit_count > 1 else ''}.", flush=True)
+            print(f"For a total of {total_visits} donor sample{'s' if total_visits > 1 else ''}.", flush=True)
         else:
             print("You did not provide visit information for multiple samples (per donor). If any donor has multiple samples, you must provide the longitudinal_obs_column in the cmverify 'predict' function call or predictions will be inaccurate.")
 
