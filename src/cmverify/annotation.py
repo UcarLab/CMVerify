@@ -38,7 +38,7 @@ def annotate_with_model(adata, model_name):
 
     return label_results
 
-def check_and_add_labels(adata, label_results, model_name):
+def check_and_add_labels(adata, label_results, model_name, verbose):
     """
     Check the summary of predicted labels, add them to `adata.obs`, and check for sufficient unique cell types.
     
@@ -63,15 +63,16 @@ def check_and_add_labels(adata, label_results, model_name):
     # Check if there are at least 20 unique cell types in the predictions
     unique_cell_types = label_summary.shape[0]
     if unique_cell_types < 20:
-        warnings.warn(f"Warning: The model '{model_name}' predicted only {unique_cell_types} unique cell types. You may not have enough cells.", stacklevel=2)
+        print(f"Warning: The model '{model_name}' predicted only {unique_cell_types} unique cell types. You may not have enough cells.")
     else:
-        print("Top 20 most frequent cell types detected with cell counts:")
-        print(label_summary[0:20], end = '\n\n')
+        if verbose == 1:
+            print("Top 20 most frequent cell types detected with cell counts:")
+            print(label_summary[0:20], end = '\n\n')
 
     # Add the predicted labels and score to adata.obs
     adata.obs[label_column] = label_df[label_column]
 
-def calculate_cell_type_fractions(adata, model_name, donor_obs_column, longitudinal_obs_column=None):
+def calculate_cell_type_fractions(adata, model_name, donor_obs_column, longitudinal_obs_column, verbose):
     """
     Calculate the fraction of cells for each label per patient (person).
     
@@ -104,6 +105,29 @@ def calculate_cell_type_fractions(adata, model_name, donor_obs_column, longitudi
             .size()
             .unstack(fill_value=0)  # Converts to a wide format with labels as columns
         )
+
+    # output number of donors and visits per donor
+    if verbose == 1:
+        unique_donors = fractions_df.index.get_level_values(donor_obs_column).unique()
+        num_unique_donors = len(unique_donors)
+        print(f"We detected {num_unique_donors} unique donors.", flush=True)
+        if longitudinal_obs_column is not None:
+            #Count how many visits each donor has (using the longitudinal column)
+            visits_per_donor = adata.obs.groupby(donor_obs_column)[longitudinal_obs_column].nunique()
+        
+            # Count how many donors have 1 visit, 2 visits, etc.
+            donor_visit_counts = visits_per_donor.value_counts().sort_index()
+        
+            # Calculate the total number of donor visits (sum of all visit counts)
+            total_visits = visits_per_donor.sum()
+        
+            for visit_count, num_donors in donor_visit_counts.items():
+                print(f"{num_donors} donors had {visit_count} visit{'s' if visit_count > 1 else ''}.", flush=True)
+            print(f"For a total of {total_visits} donor visits.", flush=True)
+        else:
+            print("You did not provide visit information for multiple samples (per donor). If any donor has multiple samples, you must provide the longitudinal_obs_column in the cmverify 'predict' function call or predictions will be inaccurate.")
+
+    
     # Capture the donor IDs before resetting the index
     fractions_df = fractions_df[(fractions_df.sum(axis=1) > 0)]
     donor_ids_partial = fractions_df.index.get_level_values(donor_obs_column).tolist()
@@ -129,10 +153,11 @@ def calculate_cell_type_fractions(adata, model_name, donor_obs_column, longitudi
             
     # If there are missing columns, issue a warning
     if missing_columns:
-        print(f"The following cell types were not detected and have been initialized with zeroes: {', '.join(missing_columns)}")
+        print(f"Note: the following cell types were not detected and have been initialized with zeroes: {', '.join(missing_columns)}", flush=True)
+        print("Typically this occurs when using the model with fewer cells or sequencing at lower depth. Results may or may not be affected.", flush=True)
 
     # Ensure the columns are in the expected order
     fractions_df = fractions_df[EXPECTED_COLUMNS]
-    
+    fractions_df.index.name = None
     # Return the calculated fractions
     return fractions_df, donor_ids

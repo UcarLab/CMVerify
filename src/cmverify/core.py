@@ -7,9 +7,10 @@ try:
 except ImportError:
     display = print  # Use print as fallback in non-IPython environments
 
-def load_models():
+def load_models(verbose):
     """Load the models and scaler for use in predictions."""
-    print("Loading model...", flush=True)
+    if verbose ==1:
+        print("Loading the CMVerify model...", flush=True)
 
     # Load the models and scaler
     rf_best_model = load_model('rf_best_estimator')
@@ -18,51 +19,61 @@ def load_models():
     # Return the models and scaler so they can be used in analysis
     return rf_best_model, scaler
 
-def predict(adata,donor_obs_column, longitudinal_obs_column=None, verbose = False):
+def predict(adata,donor_obs_column, longitudinal_obs_column=None, verbose = 1):
     """Normalize to 10k, apply log1p, load the models, annotate and predict."""
     # Confirm required parameters
     if donor_obs_column not in adata.obs.columns:
         raise ValueError(f"{donor_obs_column} is not a valid column in adata.obs.")
     
+    if verbose == 1:
+        print("Checking if normalizing the data to 10k reads per cell is needed...", flush=True)
     # Normalize the data to 10k reads per cell
-    print("Checking if normalizing the data to 10k reads per cell is needed...", flush=True)
-    normalize_total_10k(adata)
+    normalize_total_10k(adata,verbose)
     
+   
+    if verbose == 1:
+        print("Checking if log1p transformation is necessary...", flush=True)
     # Apply log1p transformation if needed
-    print("Checking if log1p transformation is necessary...", flush=True)
-    log1p_if_needed(adata)
+    log1p_if_needed(adata, verbose)
     
     model_name = 'AIFI_L3'
+    if verbose == 1:
+        print(f"Annotating the data using the {model_name} model...", flush=True)
     # Annotate the data using the loaded model
-    print(f"Annotating the data using the {model_name} model...", flush=True)
     label_results = annotate_with_model(adata, model_name)
 
-    # Check and add labels, and print the summary
-    print(f"Checking label summary for {model_name}...", flush=True)
-    check_and_add_labels(adata, label_results, model_name)
-
-    # Calculate the fraction of cells for each label per patient (person)
-    print(f"Calculating the fraction of cells for each label per donor...", flush=True)
-    fractions_df, donor_ids = calculate_cell_type_fractions(adata, model_name, donor_obs_column, longitudinal_obs_column)
     
+    if verbose == 1:
+        print(f"Checking label summary for {model_name}...", flush=True)
+    # Check and add labels, and print the summary
+    check_and_add_labels(adata, label_results, model_name, verbose)
+
+    if verbose == 1:
+        print(f"Calculating the fraction of cells for each label per donor...", flush=True)
+    # Calculate the fraction of cells for each label per patient (person)
+    fractions_df, donor_ids = calculate_cell_type_fractions(adata, model_name, donor_obs_column, longitudinal_obs_column, verbose)
+
     # Display the calculated fractions
-    if verbose:
+    if verbose == 1:
         print(f"Displaying first 5 rows of donor level peripheral blood mononuclear cell composition:", flush=True)
         display(fractions_df.head().style.hide(axis='index'))
 
     # Load models and scaler
-    rf_best_model, scaler = load_models()
+    rf_best_model, scaler = load_models(verbose)
 
+    if verbose == 1:
+        print("Scaling the calculated fractions...", flush=True)
     # Scale the fractions data using the pre-loaded scaler
-    print("Scaling the calculated fractions...", flush=True)
     fractions_df_scaled = scaler.transform(fractions_df)
     
+    if verbose == 1:
+        print("Making predictions using the CMVerify model...", flush=True)
     # Get the predictions (CMV status)
-    print("Making predictions using the CMVerify model...", flush=True)
     cmv_pred = rf_best_model.predict(fractions_df_scaled)
 
+    if verbose == 1:
+        print("Getting predicted probabilities for CMV status...", flush=True)
     # Get the predicted probabilities for CMV status
-    print("Getting predicted probabilities for CMV status...", flush=True)
     cmv_pred_probs = rf_best_model.predict_proba(fractions_df_scaled)[:, 1]  # Probability of the positive class
     
     # Combine the donor ID, prediction, and probability into a list of dictionaries
@@ -74,9 +85,14 @@ def predict(adata,donor_obs_column, longitudinal_obs_column=None, verbose = Fals
             'probability': round(prob,3)
         })
 
+    # Return fractions df as well, with donor_id_timepoint, pred and prob
+    fractions_df["donor_id_timepoint"] = donor_ids
+    
+    # Reorder columns
+    cols = ["donor_id_timepoint"] + [col for col in fractions_df.columns if col not in ["donor_id_timepoint"]]
+
     if verbose:
         print("Outputting predictions", flush=True)
         print(results)
-        
-    print("All done. Thank you!", flush=True)
-    return results
+        print("All done. Thank you!", flush=True)
+    return results, fractions_df

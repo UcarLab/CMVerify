@@ -3,29 +3,38 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-def visualize(results, visit_order=None):
+def visualize(results, visit_order=None, figWidth=8,figHeight=3,  dpi_param=100,save=False,filename='cmverify_viz.png',show=True):
     """
     Plot longitudinal prediction probabilities per donor over visits.
 
     Parameters:
         results (list of dict): Each dict must include:
-            - 'donor_id': a tuple (donor_id, visit)
+            - 'donor_id_timepoint': a tuple (donor_id, visit)
             - 'probability': model-predicted probability
+        visit_order (list, optional): Custom ordering of visit labels.
+        figWidth, figHeight (float): Figure dimensions.
+        dpi_param (int): DPI for the figure.
+        verbose (int): Verbosity level.
+        save (bool): Whether to save the figure.
+        filename (str): Output filename if saving.
     """
     print("Generating visualization", flush=True)
+        
     # Convert list of dicts to DataFrame
     df = pd.DataFrame(results)
 
+    # Split donor_id_timepoint tuple into separate columns
     df['Donor_id'] = df['donor_id_timepoint'].apply(lambda x: x[0])
     df['Visit'] = df['donor_id_timepoint'].apply(lambda x: x[1])
 
+    # Apply categorical ordering to visits
     if visit_order is None:
         df['Visit'] = pd.Categorical(df['Visit'], categories=df['Visit'].unique(), ordered=True)
     else:
         df['Visit'] = pd.Categorical(df['Visit'], categories=visit_order, ordered=True)
 
-    # Plotting
-    plt.figure(figsize=(8, 3), dpi=100)
+    # Set up figure and plot base points as a stripplot
+    plt.figure(figsize=(figWidth, figHeight), dpi=dpi_param)
     sns.stripplot(
         data=df,
         x='Visit',
@@ -37,30 +46,49 @@ def visualize(results, visit_order=None):
         palette=["black"]
     )
 
+    # Draw dashed lines connecting points for each donor
     for donor_id in df['Donor_id'].unique():
         donor_data = df[df['Donor_id'] == donor_id]
-        # Filter out rows where 'cohort_timepoint' or 'col' is NaN
+        
+        # Drop any rows with missing data
         donor_data = donor_data.dropna(subset=['Visit', 'probability'])
-        # Plot the line if there is data for at least two timepoints
+        
+        # Only connect dots if donor has multiple timepoints
         if len(donor_data) > 1:
             sorted_cat = (donor_data['Visit'].cat.codes).sort_values()
-            c='black'
-            width = 0.2
-            plt.plot(sorted_cat, donor_data['probability'].loc[sorted_cat.index], 
-                     linestyle='--', linewidth=width, color=c, alpha=0.5,marker='')  # Adjust alpha for transparency
+            plt.plot(sorted_cat, 
+                     donor_data['probability'].loc[sorted_cat.index], 
+                     linestyle='--', 
+                     linewidth=0.2, 
+                     color='black', 
+                     alpha=0.5,
+                     marker=''
+                    )
+
+            # Add donor ID text at final timepoint
             last_x = sorted_cat.index[-1]
             last_y = donor_data['probability'].loc[sorted_cat.index[-1]]
-            plt.text(sorted_cat.iloc[-1]+.1, last_y, str(donor_id), 
-                    fontsize=6, verticalalignment='center', 
-                    horizontalalignment='left')
+            plt.text(
+                sorted_cat.iloc[-1]+.1, 
+                last_y, str(donor_id), 
+                fontsize=6, 
+                verticalalignment='center', 
+                horizontalalignment='left'
+            )
 
-    # Final formatting
+    # Add axis labels and formatting
     plt.xlabel('Timepoint')
     plt.ylabel('Model Prediction')
     plt.xticks(fontsize=6)
-    # Add the decision threshold line
+    
+    # Draw horizontal threshold line at 0.5
     threshold_line = plt.axhline(y=0.5, color='red', lw=0.5, linestyle='--')
-    # Add a legend for the threshold
+    
+    # Fit layout and optionally save
     plt.legend([threshold_line], ['Decision Threshold'], loc='best', fontsize=8)
     plt.tight_layout()
-    plt.show()
+    if save:
+        plt.savefig(filename, dpi=dpi_param, bbox_inches='tight')
+        
+    if show:
+        plt.show()

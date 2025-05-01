@@ -1,7 +1,7 @@
 # src/cmverify/utils.py
 import scanpy as sc
 
-def normalize_total_10k(adata):
+def normalize_total_10k(adata, verbose):
     """
     Normalize the data in `adata.X` to a total count of 10,000 reads per cell.
     This function assumes that `adata.X` contains the raw counts (no `.raw` check).
@@ -11,24 +11,26 @@ def normalize_total_10k(adata):
     # Check if data is log-transformed
     if "log1p" in adata.uns:
         # Skip normalization if already log-transformed
-        print("WARNING! Data looks to be already log-transformed. Skipping normalization to 10k reads per cell. Double check your pipeline.")
+        print("WARNING! Data looks to be already log-transformed (log1p layer detected in adata.uns). Skipping normalization to 10k reads per cell. Double check your pipeline.", flush=True)
     elif adata.X is not None:
+        if verbose == 1:
+            print("Normalizing .X to 10k reads per cell.", flush=True)
         # Normalize .X to 10k reads per cell
-        print("Normalizing .X to 10k reads per cell.")
         sc.pp.normalize_total(adata, target_sum=1e4)
     else:
         # If .X is not available, raise an error
         raise ValueError("No expression data (.X) found in the AnnData object.")
 
 
-def log1p_if_needed(adata):
+def log1p_if_needed(adata, verbose):
     """
     Apply log1p transformation to `adata.X` if not already log-transformed.
     The function assumes that log1p is applied if 'log1p' exists in `.uns`.
     If `.raw` is present, the log1p will be applied to `.raw` and not `.X`.
     """
     if "log1p" not in adata.uns:
-        print("Applying log1p transformation to the data.")
+        if verbose == 1:
+            print("Applying log1p transformation to the data.", flush=True)
         sc.pp.log1p(adata)
     else:
-        print("Data already log-transformed, skipping log1p.")
+        print("Data looks to be already log-transformed (log1p layer detected in adata.uns), skipping log1p.", flush=True)
