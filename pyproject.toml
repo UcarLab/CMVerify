@@ -19,7 +19,6 @@ classifiers = [
 Homepage = "https://ucarlab.github.io/"
 dependencies = [
     "scanpy",
-    "scikit-learn",
     "matplotlib",
     "anndata",
     "celltypist",

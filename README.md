@@ -22,7 +22,6 @@ Requirements
 
 - Python 3.8+
 - `scanpy`
-- `scikit-learn`
 - `matplotlib`
 - `numpy`
 - `pandas`
@@ -93,6 +92,18 @@ You can also return the calculated cell type fractions along with the prediction
     # Display the first 5 rows of the cell type fractions
     print(fractions_df.head())
 
+### 5. Visualize Longitudinal Predictions
+
+You can visualize longitudinal CMV prediction probabilities across timepoints using the `visualize` function.
+
+```python
+from cmverify import visualize
+
+visualize(results, visit_order=['Baseline', 'Month3', 'Month6'], save=True, filename='example_plot.png')
+```
+
+This will generate a figure connecting donor predictions across visits and mark the decision threshold.
+
 Functions
 ---------
 
@@ -106,29 +117,37 @@ This is the main function used to predict CMV status. It performs the following 
 5. Loads the models and scaler.
 6. Makes predictions based on the cell type fractions.
 
-Parameters:
-- **adata**: An AnnData object containing your single-cell RNA-seq data.
-- **donor_obs_column**: The column in `adata.obs` that contains the donor ID.
-- **longitudinal_obs_column** (optional): The column in `adata.obs` for timepoints (e.g., for longitudinal data).
-- **verbose**: Set to 1 for progress messages.
-- **return_frac**: If `True`, returns the fractions DataFrame along with predictions.
+**Parameters**:
+- `adata`: An AnnData object containing your single-cell RNA-seq data.
+- `donor_obs_column`: The column in `adata.obs` that contains the donor ID.
+- `longitudinal_obs_column` (optional): The column in `adata.obs` for timepoints (e.g., for longitudinal data).
+- `verbose`: Set to 1 for progress messages.
+- `return_frac`: If `True`, returns the fractions DataFrame along with predictions.
 
-Returns:
+**Returns**:
 - A list of dictionaries containing donor IDs, predictions, and probabilities (CMV status).
 - Optionally, the DataFrame of cell type fractions.
 
-### 5. Error Handling
+### `visualize(results, visit_order=None, figWidth=8, figHeight=3, dpi_param=100, save=False, filename='cmverify_viz.png', show=True)`
 
-If a required column is missing in your `adata` object, an error will be raised:
+This function visualizes longitudinal CMV prediction probabilities per donor.
 
-    ValueError: {donor_obs_column} is not a valid column in adata.obs.
+**Parameters**:
+- `results`: A list of dictionaries with keys `'donor_id_timepoint'` (tuple) and `'probability'` (float).
+- `visit_order`: Optional list specifying the order of visit labels.
+- `figWidth`, `figHeight`: Figure dimensions in inches.
+- `dpi_param`: Dots-per-inch resolution for the plot.
+- `save`: Whether to save the plot as an image file.
+- `filename`: Output filename if saving.
+- `show`: Whether to display the plot.
 
 Model Training
 --------------
 
 CMVerify uses a pre-trained random forest model (`rf_best_estimator`) and a corresponding scaler (`rf_scaler`). These models have been trained on relevant single-cell RNA-seq data and are used to predict CMV serostatus based on cell type composition.
 
-Many thanks to the Allen Institute for sharing their cohort data and enhancing reproducability in science. Below are some helpful links to their analysis pipeline, scRNA-seq data, and celltypist models.
+Many thanks to the Allen Institute for sharing their cohort data and enhancing reproducibility in science. Below are some helpful links to their preprint, analysis pipeline, scRNA-seq data, and celltypist models.
+
 - [Gong et al. 2024 preprint via bioRxiv](https://www.biorxiv.org/content/10.1101/2024.09.10.612119v1) – bioRxiv preprint
 - [Immune Health Atlas Analysis](https://apps.allenimmunology.org/aifi/resources/imm-health-atlas/analysis/)
 - [scRNA-seq Downloads – Dynamics of Immune Health with Age](https://apps.allenimmunology.org/aifi/insights/dynamics-imm-health-age/downloads/scrna/)
@@ -142,7 +161,7 @@ If you'd like to contribute to the development of CMVerify, please fork the repo
 License
 -------
 
-CMVerify is released under the MIT License. See LICENSE for more information.
+CMVerify is released under the AGPL-3.0 License. See LICENSE for more information.
 
 ---
 
