@@ -144,11 +144,11 @@ This function visualizes longitudinal CMV prediction probabilities per donor.
 Model Training
 --------------
 
-CMVerify uses a pre-trained random forest model (`rf_best_estimator`) and a corresponding scaler (`rf_scaler`). These models have been trained on relevant single-cell RNA-seq data and are used to predict CMV serostatus based on cell type composition.
+CMVerify uses a random forest classifier (`rf_best_estimator`) and a corresponding scaler (`rf_scaler`). These models have been trained on relevant single-cell RNA-seq data and are used to predict CMV serostatus based on cell type composition.
 
 Many thanks to the Allen Institute for sharing their cohort data and enhancing reproducibility in science. Below are some helpful links to their preprint, analysis pipeline, scRNA-seq data, and celltypist models.
 
-- [Gong et al. 2024 preprint via bioRxiv](https://www.biorxiv.org/content/10.1101/2024.09.10.612119v1) – bioRxiv preprint
+- [Gong et al. 2024 preprint via bioRxiv](https://www.biorxiv.org/content/10.1101/2024.09.10.612119v1)
 - [Immune Health Atlas Analysis](https://apps.allenimmunology.org/aifi/resources/imm-health-atlas/analysis/)
 - [scRNA-seq Downloads – Dynamics of Immune Health with Age](https://apps.allenimmunology.org/aifi/insights/dynamics-imm-health-age/downloads/scrna/)
 - [Model Downloads – Immune Health Atlas](https://apps.allenimmunology.org/aifi/resources/imm-health-atlas/downloads/models/)

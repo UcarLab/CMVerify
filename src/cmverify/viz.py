@@ -2,8 +2,9 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+import matplotlib.patches as mpatches
 
-def visualize(results, visit_order=None, figWidth=8,figHeight=3,  dpi_param=100,save=False,filename='cmverify_viz.png',show=True):
+def visualize(results, visit_order=None,figWidth=8,figHeight=3,  dpi_param=100,save=False,filename='cmverify_viz.png',show=True):
     """
     Plot longitudinal prediction probabilities per donor over visits.
 
@@ -35,16 +36,32 @@ def visualize(results, visit_order=None, figWidth=8,figHeight=3,  dpi_param=100,
 
     # Set up figure and plot base points as a stripplot
     plt.figure(figsize=(figWidth, figHeight), dpi=dpi_param)
-    sns.stripplot(
-        data=df,
-        x='Visit',
-        y='probability',
-        alpha=1,
-        jitter=False,
-        edgecolor='black',
-        linewidth=0.1,
-        palette=["black"]
-    )
+
+    # Plot stripplot, using hue if true_label is available
+    if 'true_label' in df.columns:
+        sns.stripplot(
+            data=df,
+            x='Visit',
+            y='probability',
+            hue='true_label',
+            palette=["#1eb8d4", "#faa31b"],
+            alpha=1,
+            jitter=False,
+            edgecolor='black',
+            linewidth=0.1
+        )
+        plt.legend(title='True CMV', labels=['CMV-', 'CMV+'], fontsize=8, title_fontsize=9, loc='best')
+    else:
+        sns.stripplot(
+            data=df,
+            x='Visit',
+            y='probability',
+            alpha=1,
+            jitter=False,
+            edgecolor='black',
+            linewidth=0.1,
+            palette=["black"]
+        )
 
     # Draw dashed lines connecting points for each donor
     for donor_id in df['Donor_id'].unique():
@@ -85,7 +102,23 @@ def visualize(results, visit_order=None, figWidth=8,figHeight=3,  dpi_param=100,
     threshold_line = plt.axhline(y=0.5, color='red', lw=0.5, linestyle='--')
     
     # Fit layout and optionally save
-    plt.legend([threshold_line], ['Decision Threshold'], loc='best', fontsize=8)
+    # Custom legend handling
+    handles, labels = plt.gca().get_legend_handles_labels()
+    
+    # If 'true_label' in df, add color patches
+    if 'true_label' in df.columns:
+        custom_patches = [
+            mpatches.Patch(color="#1eb8d4", label='True CMV-'),
+            mpatches.Patch(color="#faa31b", label='True CMV+')
+        ]
+        handles.extend(custom_patches)
+    
+    # Add threshold line label
+    handles.append(threshold_line)
+    labels.append('Decision Threshold')
+    
+    plt.legend(handles=handles, labels=labels, loc='best', fontsize=8)
+
     plt.tight_layout()
     if save:
         plt.savefig(filename, dpi=dpi_param, bbox_inches='tight')

@@ -1,5 +1,6 @@
 # src/cmverify/utils.py
 import scanpy as sc
+import pandas as pd
 
 def normalize_total_10k(adata, verbose):
     """
@@ -34,3 +35,16 @@ def log1p_if_needed(adata, verbose):
         sc.pp.log1p(adata)
     else:
         print("Data looks to be already log-transformed (log1p layer detected in adata.uns), skipping log1p.", flush=True)
+
+
+def normalize_cmv(value):
+    """Convert CMV labels to binary format (0 = negative, 1 = positive)."""
+    if pd.isna(value):
+        return None
+    value_str = str(value).strip().lower()
+    if value_str in {'1', '1.0', 'pos', 'positive','p'}:
+        return 1
+    elif value_str in {'0', '0.0', 'neg', 'negative','n'}:
+        return 0
+    else:
+        return None  # Or raise an error if strict

@@ -90,8 +90,6 @@ def calculate_cell_type_fractions(adata, model_name, donor_obs_column, longitudi
 
     # modularizing to allow longitudinal prediction
     if longitudinal_obs_column is not None:
-        if longitudinal_obs_column not in adata.obs.columns:
-            raise ValueError(f"{longitudinal_obs_column} is not a valid column in adata.obs.")
         obs_df = adata.obs[[donor_obs_column, longitudinal_obs_column,label_column]]
         # Calculate the fraction of cells for each label per patient per timepoint
         fractions_df = (

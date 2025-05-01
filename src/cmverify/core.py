@@ -1,5 +1,5 @@
 # src/CMVerify/core.py
-from .utils import normalize_total_10k, log1p_if_needed
+from .utils import normalize_total_10k, log1p_if_needed, normalize_cmv
 from .annotation import annotate_with_model, check_and_add_labels, calculate_cell_type_fractions
 from .models import load_model
 try:
@@ -19,17 +19,19 @@ def load_models(verbose):
     # Return the models and scaler so they can be used in analysis
     return rf_best_model, scaler
 
-def predict(adata,donor_obs_column, longitudinal_obs_column=None, verbose = 1,return_frac=False):
+def predict(adata,donor_obs_column, longitudinal_obs_column=None, verbose = 1,return_frac=False, true_status=None):
     """Normalize to 10k, apply log1p, load the models, annotate and predict."""
     # Confirm required parameters
     if donor_obs_column not in adata.obs.columns:
         raise ValueError(f"{donor_obs_column} is not a valid column in adata.obs.")
-    
+    if longitudinal_obs_column is not None and longitudinal_obs_column not in adata.obs.columns:
+            raise ValueError(f"{longitudinal_obs_column} is not a valid column in adata.obs.")
+    if true_status is not None and true_status not in adata.obs.columns:
+            raise ValueError(f"{true_status} is not a valid column in adata.obs.")
     if verbose == 1:
         print("Checking if normalizing the data to 10k reads per cell is needed...", flush=True)
     # Normalize the data to 10k reads per cell
     normalize_total_10k(adata,verbose)
-    
    
     if verbose == 1:
         print("Checking if log1p transformation is necessary...", flush=True)
@@ -91,11 +93,22 @@ def predict(adata,donor_obs_column, longitudinal_obs_column=None, verbose = 1,re
     # Reorder columns
     cols = ["donor_id_timepoint"] + [col for col in fractions_df.columns if col not in ["donor_id_timepoint"]]
 
+    if true_status is not None:
+        if verbose:
+            print("Standardizing CMV labels", flush=True)
+        # Create the CMV dictionary
+        df = adata.obs[[donor_obs_column, true_status]].copy()
+        df['cmv'] = df[true_status].apply(normalize_cmv)
+        df = df.dropna().drop_duplicates(subset=donor_obs_column)
+        true_labels = df.set_index(donor_obs_column)['cmv'].astype(int).to_dict()   
+        # Assuming 'true_labels' has been already created as a dictionary
+        for result in results:
+            donor_id = result['donor_id_timepoint'][0]  # Assuming donor_id_timepoint is a tuple (donor_id, timepoint)
+            result['true_label'] = true_labels.get(donor_id, None)
     if verbose:
         print("Outputting predictions", flush=True)
         print(results)
         print("All done. Thank you!", flush=True)
-
     if return_frac:
         return results, fractions_df
     else:
