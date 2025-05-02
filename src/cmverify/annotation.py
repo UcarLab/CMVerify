@@ -25,9 +25,15 @@ def annotate_with_model(adata, model_name):
     #resolve the path to the model
     model_file = 'models/ref_pbmc_clean_celltypist_model_AIFI_L3_2024-04-19.pkl'
     model_path = os.path.join(os.path.dirname(__file__), model_file)
-    
-    # Annotate the AnnData object using the selected model
-    predictions = celltypist.annotate(adata, model=model_path)
+
+    try:
+        # Annotate the AnnData object using the selected model
+        predictions = celltypist.annotate(adata, model=model_path)
+    except ValueError as e:
+        if "Input X contains NaN" in str(e):
+            print("Error: The input contains NaN values. Reload your adata object and try calling `predict(..., norm=False)` to avoid redundant normalization that may introduce NaNs.")
+        else:
+            raise  # re-raise other ValueErrors not related to NaNs
 
     # Extract the predicted labels and rename the column
     labels = predictions.predicted_labels

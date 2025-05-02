@@ -120,7 +120,7 @@ This will generate a figure connecting donor predictions across visits and mark 
 Functions
 ---------
 
-### `predict(adata, donor_obs_column, longitudinal_obs_column=None, verbose=1, return_frac=False, true_status=None)`
+### `predict(adata, donor_obs_column, longitudinal_obs_column=None, verbose=1, return_frac=False, true_status=None, norm=True)`
 
 This function predicts CMV status using pre-trained models on single-cell RNA-seq data. It normalizes, transforms, annotates, and calculates cell type fractions per donor before predicting CMV status.
 
@@ -131,6 +131,7 @@ This function predicts CMV status using pre-trained models on single-cell RNA-se
 - `verbose` (optional): Verbosity level for progress messages. Default is 1 (show output), set to 0 to suppress.
 - `return_frac` (optional): If `True`, returns the fractions DataFrame along with predictions.
 - `true_status` (optional): The column in `adata.obs` for true donor serostatus (ground truth) for evaluation (default is None).
+- `norm` (optional): bool, default = True; if raw counts are unavailable, or an error occurs during execution, user may turn normalization off by setting norm = False
 
 **Returns**:
 - A list of dictionaries containing donor IDs, predictions, and probabilities (CMV status).

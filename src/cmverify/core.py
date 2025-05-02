@@ -20,7 +20,7 @@ def load_models(verbose):
     # Return the models and scaler so they can be used in analysis
     return rf_best_model, scaler
 
-def predict(adata,donor_obs_column, longitudinal_obs_column=None, verbose = 1,return_frac=False, true_status=None):
+def predict(adata,donor_obs_column, longitudinal_obs_column=None, verbose = 1,return_frac=False, true_status=None, norm = True):
     """
     Predicts donor classification from an AnnData object using pre-trained models.
     
@@ -43,6 +43,8 @@ def predict(adata,donor_obs_column, longitudinal_obs_column=None, verbose = 1,re
         Whether to return the fraction of predictive cell types used for classification.
     - true_status : str or None, default=None
         Optional ground truth donor status column name for evaluation or model validation.
+    - norm : bool, default = True
+        We highly encourage passing raw counts into this method, however, if raw counts are unavailable, or an error occurs during execution, user may turn normalization off by setting norm = False
 
     Returns:
     - AnnData
@@ -56,15 +58,19 @@ def predict(adata,donor_obs_column, longitudinal_obs_column=None, verbose = 1,re
             raise ValueError(f"{longitudinal_obs_column} is not a valid column in adata.obs.")
     if true_status is not None and true_status not in adata.obs.columns:
             raise ValueError(f"{true_status} is not a valid column in adata.obs.")
-    if verbose == 1:
-        print("Checking if normalizing the data to 10k reads per cell is needed...", flush=True)
-    # Normalize the data to 10k reads per cell
-    normalize_total_10k(adata,verbose)
-   
-    if verbose == 1:
-        print("Checking if log1p transformation is necessary...", flush=True)
-    # Apply log1p transformation if needed
-    log1p_if_needed(adata, verbose)
+
+    if norm:
+        if verbose == 1:
+            print("Checking if normalizing the data to 10k reads per cell is needed...", flush=True)
+        # Normalize the data to 10k reads per cell
+        normalize_total_10k(adata,verbose)
+       
+        if verbose == 1:
+            print("Checking if log1p transformation is necessary...", flush=True)
+        # Apply log1p transformation if needed
+        log1p_if_needed(adata, verbose)
+    else:
+        print("User turned off normalization, data should already be normalized to 10k reads and log1p...", flush=True)
     
     model_name = 'AIFI_L3'
     if verbose == 1:
