@@ -22,7 +22,7 @@ dependencies = [
     "celltypist",
     "ipython",
     "joblib",
-    "numpy", 
+    "numpy",
     "pandas",
     "seaborn"
 ]

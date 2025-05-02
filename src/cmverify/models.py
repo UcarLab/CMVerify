@@ -18,7 +18,6 @@ def load_model(model_name):
     """
     model_files = {
         'rf_best_estimator': 'models/AIFI_rf_best_estimator.pkl',
-        'rf_model': 'models/AIFI_rf_model.pkl',
         'rf_scaler': 'models/rf_scaler.pkl'
     }
 

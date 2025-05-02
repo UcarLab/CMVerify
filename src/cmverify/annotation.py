@@ -14,7 +14,7 @@ def annotate_with_model(adata, model_name):
         The name of the model to use for annotation.
     
     Returns:
-    dict: Dictionary containing annotated labels and scores.
+    dict: A dictionary containing annotated labels and their scores.
     """
 
     label_results = {}
@@ -53,6 +53,7 @@ def check_and_add_labels(adata, label_results, model_name, verbose):
     Returns:
     None
     """
+    # Extract predicted labels from label results
     label_df = label_results[model_name]  # Since we have only one model
 
     label_column = f'{model_name}_prediction'
