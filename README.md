@@ -33,6 +33,9 @@ Requirements
 - `joblib`
 
 These dependencies are automatically installed when you install CMVerify.
+
+R Users
+-------
 [For R users please refer to this vignette for converting from Seurat to Anndata](https://mojaveazure.github.io/seurat-disk/articles/convert-anndata.html)
 
 Usage
@@ -44,7 +47,9 @@ Here is how you can use CMVerify in your Python environment:
 
 To use CMVerify, start by importing the necessary module in your Python script:
 
-    from cmverify import predict, visualize
+```python
+from cmverify import predict, visualize
+```
 
 ### 2. Data Preparation
 
@@ -54,13 +59,15 @@ Before running predictions, ensure your data is prepared correctly. CMVerify req
 
 You can convert your AnnData object from `.raw` to `.X` as follows:
 
-    import scanpy as sc
+```python
+import scanpy as sc
 
-    # Read the .h5ad file containing the raw data
-    adata_pre = sc.read_h5ad('path_to_data.h5ad')
+# Read the .h5ad file containing the raw data
+adata_pre = sc.read_h5ad('path_to_data.h5ad')
 
-    # Use the raw counts for analysis (and retain metadata in .obs and .var)
-    adata = sc.AnnData(X=adata_pre.raw.X, obs=adata_pre.obs, var=adata_pre.raw.var)
+# Use the raw counts for analysis (and retain metadata in .obs and .var)
+adata = sc.AnnData(X=adata_pre.raw.X, obs=adata_pre.obs, var=adata_pre.raw.var)
+```
 
 This ensures that the data used for predictions is based on raw counts, which is essential for the analysis.
 
@@ -70,39 +77,45 @@ To make predictions, you need to load your single-cell RNA-seq data (`AnnData` o
 
 #### Example:
 
-    import scanpy as sc
-    from cmverify import predict
+```python
+import scanpy as sc
+from cmverify import predict
 
-    # Load your single-cell RNA-seq data (AnnData object)
-    adata = sc.read('path_to_data.h5ad')
+# Load your single-cell RNA-seq data (AnnData object)
+adata = sc.read('path_to_data.h5ad')
 
-    # Specify the columns for donor and longitudinal data
-    donor_obs_column = 'donor_id'
-    longitudinal_obs_column = 'timepoint'
+# Specify the columns for donor and longitudinal data
+donor_obs_column = 'donor_id'
+longitudinal_obs_column = 'timepoint'
 
-    # Predict CMV status
-    results = predict(adata, donor_obs_column, longitudinal_obs_column)
+# Predict CMV status
+results = predict(adata, donor_obs_column, longitudinal_obs_column)
 
-    # Output the predictions
-    print(results)
+# Output the predictions
+print(results)
+```
 
 ### 4. Return Fractions
 
 You can also return the calculated cell type fractions along with the predictions by setting the `return_frac` parameter to `True`.
 
-    results, fractions_df = predict(adata, donor_obs_column, longitudinal_obs_column, return_frac=True)
+```python
+results, fractions_df = predict(adata, donor_obs_column, longitudinal_obs_column, return_frac=True)
 
-    # Display the first 5 rows of the cell type fractions
-    print(fractions_df.head())
+# Display the first 5 rows of the cell type fractions
+print(fractions_df.head())
+```
 
-## 4b. Append Ground Truth CMV Status (Optional)
+#### 4b. Append Ground Truth CMV Status (Optional)
 
 If you have true CMV status in a separate metadata file (not in adata.obs), you can use the append_status function to match and append it to the prediction output.
 
-    from cmverify import append_status
-    
-    # Add true labels to predictions
-    updated_predictions = append_status(results, cmv_metadata_df, patient_col='patientID', cmv_col='CMV')
+```python
+from cmverify import append_status
+
+# Add true labels to predictions
+updated_predictions = append_status(results, cmv_metadata_df, patient_col='patientID', cmv_col='CMV')
+```
 
 
 ### 5. Visualize Longitudinal Predictions
