@@ -142,24 +142,28 @@ def visualize(results, visit_order=None,figWidth=8,figHeight=3,  dpi_param=100,s
         print(classification_report(df['true_label'], df['prediction']))
         # show confusion matrix
         cm = confusion_matrix(df['true_label'], df['prediction'])
-        plt.figure(figsize=(6, 4), dpi=dpi_param)
-        sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=['0','1'], yticklabels=['0','1'])
-        plt.xlabel('Predicted')
-        plt.ylabel('Actual')
-        plt.title('Confusion Matrix')
+        # Create subplots
+        fig, axes = plt.subplots(1, 2, figsize=(10, 4), dpi=dpi_param)
+        
+        # --- Confusion Matrix ---
+        sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=['0', '1'], yticklabels=['0', '1'], ax=axes[0])
+        axes[0].set_xlabel('Predicted')
+        axes[0].set_ylabel('Actual')
+        axes[0].set_title('Confusion Matrix')
+        
+        # --- ROC Curve ---
+        fpr, tpr, thresholds = roc_curve(df['true_label'], df['probability'])
+        auc = roc_auc_score(df['true_label'], df['probability'])
+        
+        axes[1].plot(fpr, tpr, label=f'ROC Curve (AUC = {auc:.2f})', color='blue')
+        axes[1].plot([0, 1], [0, 1], linestyle='--', color='gray', label='Random Guess')
+        axes[1].set_xlabel('False Positive Rate (FPR)')
+        axes[1].set_ylabel('True Positive Rate (TPR)')
+        axes[1].set_title('ROC Curve')
+        axes[1].legend(loc='lower right')
+        
+        # Layout and save/show
+        plt.tight_layout()
         if save:
-            plt.savefig('cm_' + filename, dpi=dpi_param, bbox_inches='tight')
-        plt.show()
-        # show roc curve
-        fpr, tpr, thresholds = roc_curve(df['true_label'], df['prediction'])
-        auc = roc_auc_score(df['true_label'], df['prediction'])
-        plt.figure(figsize=(4, 4), dpi=dpi_param)
-        plt.plot(fpr, tpr, label=f'ROC Curve (AUC = {auc:.2f})', color='blue')
-        plt.plot([0, 1], [0, 1], linestyle='--', color='gray', label='Random Guess')
-        plt.xlabel('False Positive Rate (FPR)')
-        plt.ylabel('True Positive Rate (TPR)')
-        plt.title('ROC Curve')
-        plt.legend(loc='lower right')
-        if save:
-            plt.savefig('roc_' + filename, dpi=dpi_param, bbox_inches='tight')
+            plt.savefig('metrics_' + filename, dpi=dpi_param, bbox_inches='tight')
         plt.show()

@@ -95,6 +95,16 @@ You can also return the calculated cell type fractions along with the prediction
     # Display the first 5 rows of the cell type fractions
     print(fractions_df.head())
 
+## 4b. Append Ground Truth CMV Status (Optional)
+
+If you have true CMV status in a separate metadata file (not in adata.obs), you can use the append_status function to match and append it to the prediction output.
+
+    from cmverify import append_status
+    
+    # Add true labels to predictions
+    updated_predictions = append_status(results, cmv_metadata_df, patient_col='patientID', cmv_col='CMV')
+
+
 ### 5. Visualize Longitudinal Predictions
 
 You can visualize longitudinal CMV prediction probabilities across timepoints using the `visualize` function.
@@ -102,7 +112,7 @@ You can visualize longitudinal CMV prediction probabilities across timepoints us
 ```python
 from cmverify import visualize
 
-visualize(results, visit_order=['Baseline', 'Month3', 'Month6'], save=True, filename='example_plot.png')
+visualize(results, visit_order=['Baseline', 'Month3', 'Month6'], save=True, filename='example_filename.png')
 ```
 
 This will generate a figure connecting donor predictions across visits and mark the decision threshold.
@@ -138,6 +148,20 @@ This function visualizes longitudinal CMV prediction probabilities per donor.
 - `save` (optional): Whether to save the plot as an image file.
 - `filename` (optional): Output filename if saving.
 - `metrics` (optional): If True, outputs additional metrics like confusion matrix, roc-curve.
+
+### `append_status(intermed_cmv_predictions, cmv_df, patient_col, cmv_col)`
+
+This utility function appends true CMV status to the intermediate prediction output by matching donor IDs with a reference CMV status DataFrame.
+Use this if you have CMV status but it is not in the adata.
+
+**Parameters**:
+- `intermed_cmv_predictions`: A list of dictionaries, each containing a `'donor_id_timepoint'` tuple as returned by `predict`.
+- `cmv_df`: A `pandas.DataFrame` containing CMV serostatus for each donor.
+- `patient_col`: The name of the column in `cmv_df` that contains donor/patient IDs.
+- `cmv_col`: The name of the column in `cmv_df` that contains CMV status values (e.g., 0 for negative, 1 for positive).
+
+**Returns**:
+- An updated list of dictionaries with a new key `'true_label'` representing the normalized CMV status for each donor. If a donor is not found in `cmv_df`, `'true_label'` is set to `None`.
 
 Model Training
 --------------

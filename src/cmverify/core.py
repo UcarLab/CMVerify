@@ -140,3 +140,32 @@ def predict(adata,donor_obs_column, longitudinal_obs_column=None, verbose = 1,re
         return results, fractions_df
     else:
         return results
+
+def append_status(intermed_cmv_predictions, cmv_df, patient_col, cmv_col):
+    """
+    Appends normalized CMV status to intermed_cmv_predictions list of dictionaries.
+
+    Parameters:
+    - intermed_cmv_predictions (list of dict): List of dictionaries, each containing 'donor_id_timepoint'.
+    - cmv_df (DataFrame): DataFrame containing 'patientID' and 'CMV' columns.
+    - patient_col (str): Name of the column in cmv_df that contains donor ID.
+    - cmv_col (str): Name of the column in cmv_df that contains CMV status.
+
+    Returns:
+    - None: The function updates intermed_cmv_predictions in place.
+    """
+    # Loop through each dictionary in the predictions list
+    for d in intermed_cmv_predictions:
+        # Extract the donor_id from the dictionary (first item in donor_id_timepoint tuple)
+        donor_id = d['donor_id_timepoint'][0]
+        
+        # Look up the CMV value from the DataFrame based on the donor_id (patientID)
+        cmv_value = cmv_df.loc[cmv_df[patient_col] == donor_id, cmv_col].values
+        if len(cmv_value) > 0:
+            # Normalize the CMV value and add it as 'true_label'
+            d['true_label'] = normalize_cmv(cmv_value[0])
+        else:
+            print("Warning, there is a donor with no CMV status. Metrics may not run correctly.")
+            # If no match is found, you can choose to add None or handle the error
+            d['true_label'] = None
+    return intermed_cmv_predictions
