@@ -156,7 +156,7 @@ Use this if you have CMV status but it is not in the adata.
 
 **Parameters**:
 - `intermed_cmv_predictions`: A list of dictionaries, each containing a `'donor_id_timepoint'` tuple as returned by `predict`.
-- `cmv_df`: A `pandas.DataFrame` containing CMV serostatus for each donor.
+- `cmv_df` (DataFrame or dict): A `pandas.DataFrame` or dict containing CMV serostatus for each donor.
 - `patient_col`: The name of the column in `cmv_df` that contains donor/patient IDs.
 - `cmv_col`: The name of the column in `cmv_df` that contains CMV status values (e.g., 0 for negative, 1 for positive).
 

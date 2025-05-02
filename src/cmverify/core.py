@@ -2,6 +2,7 @@
 from .utils import normalize_total_10k, log1p_if_needed, normalize_cmv
 from .annotation import annotate_with_model, check_and_add_labels, calculate_cell_type_fractions
 from .models import load_model
+import pandas as pd
 try:
     from IPython.display import display  # Try importing display for Jupyter environments
 except ImportError:
@@ -147,13 +148,19 @@ def append_status(intermed_cmv_predictions, cmv_df, patient_col, cmv_col):
 
     Parameters:
     - intermed_cmv_predictions (list of dict): List of dictionaries, each containing 'donor_id_timepoint'.
-    - cmv_df (DataFrame): DataFrame containing 'patientID' and 'CMV' columns.
+    - cmv_df (DataFrame or dict): DataFrame or dictionary containing 'patientID' and 'CMV' columns.
     - patient_col (str): Name of the column in cmv_df that contains donor ID.
     - cmv_col (str): Name of the column in cmv_df that contains CMV status.
 
     Returns:
     - None: The function updates intermed_cmv_predictions in place.
     """
+    # Check if cmv_df is a dictionary
+    if isinstance(cmv_df, dict):
+        # Convert the dictionary to a DataFrame
+        cmv_df = pd.DataFrame(list(cmv_df.items()), columns=['key', 'value'])
+        cmv_df.columns = [patient_col, cmv_col]  # Rename columns to match expected structure
+    
     # Loop through each dictionary in the predictions list
     for d in intermed_cmv_predictions:
         # Extract the donor_id from the dictionary (first item in donor_id_timepoint tuple)
