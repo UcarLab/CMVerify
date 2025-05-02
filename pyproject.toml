@@ -24,7 +24,8 @@ dependencies = [
     "joblib",
     "numpy",
     "pandas",
-    "seaborn"
+    "seaborn",
+    "scikit-learn"
 ]
 [project.urls]
 Homepage = "https://ucarlab.github.io/"

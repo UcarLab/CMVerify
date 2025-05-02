@@ -4,21 +4,29 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import classification_report, confusion_matrix, roc_curve, auc, roc_auc_score
 
-def visualize(results, visit_order=None,figWidth=8,figHeight=3,  dpi_param=100,save=False,filename='cmverify.png',show=True, metrics=False):
+def visualize(results, visit_order=None,figWidth=8,figHeight=3,  dpi_param=100,save=False,filename='cmverify.png', metrics=False):
     """
-    Plot longitudinal prediction probabilities per donor over visits.
+    Plot longitudinal model-predicted probabilities per donor over timepoints (visits).
+    
+    This function generates a line plot showing predicted probabilities for each donor
+    across multiple visits, with optional labeling of true outcomes and prediction accuracy.
 
     Parameters:
-        results (list of dict): Each dict must include:
-            - 'donor_id_timepoint': a tuple (donor_id, visit)
-            - 'probability': model-predicted probability
-            - Optional: 'true_label', 'prediction' for evaluation
-        visit_order (list, optional): Custom ordering of visit labels.
-        figWidth, figHeight (float): Figure dimensions.
-        dpi_param (int): DPI for the figure.
-        verbose (int): Verbosity level.
-        save (bool): Whether to save the figure.
-        filename (str): Output filename if saving.
+    - results (list of dict): List where each dictionary contains prediction info with keys:
+        - 'donor_id_timepoint': tuple (donor_id, visit label)
+        - 'probability': float, model-predicted probability for the donor at that timepoint
+        - Optional: 'true_label': ground truth label (e.g., 0/1)
+                     'prediction': binary prediction from model
+    - visit_order (list, optional): Custom list specifying the order of visit labels on the x-axis.
+    - figWidth (float): Width of the figure in inches. Default is 8.
+    - figHeight (float): Height of the figure in inches. Default is 3.
+    - dpi_param (int): Dots per inch (resolution) of the figure. Default is 100.
+    - save (bool): If True, saves the figure to `filename`. Default is False.
+    - filename (str): Name of the output image file if `save` is True. Default is 'cmverify.png'.
+    - metrics (bool): If True, overlays accuracy or other metrics if available in `results`.
+
+    Returns:
+    - None. Displays and/or saves the plot.
     """
     print("Generating visualization", flush=True)
         
@@ -127,26 +135,31 @@ def visualize(results, visit_order=None,figWidth=8,figHeight=3,  dpi_param=100,s
     plt.tight_layout()
     if save:
         plt.savefig('scatter_' + filename, dpi=dpi_param, bbox_inches='tight')
-    if show:
-        plt.show()
+    plt.show()
 
     if ('true_label' in df.columns) and metrics:
         # Print classification report
         print(classification_report(df['true_label'], df['prediction']))
+        # show confusion matrix
         cm = confusion_matrix(df['true_label'], df['prediction'])
-        plt.figure(figsize=(4, 4))
+        plt.figure(figsize=(6, 4), dpi=dpi_param)
         sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=['0','1'], yticklabels=['0','1'])
         plt.xlabel('Predicted')
         plt.ylabel('Actual')
         plt.title('Confusion Matrix')
+        if save:
+            plt.savefig('cm_' + filename, dpi=dpi_param, bbox_inches='tight')
         plt.show()
+        # show roc curve
         fpr, tpr, thresholds = roc_curve(df['true_label'], df['prediction'])
         auc = roc_auc_score(df['true_label'], df['prediction'])
-        plt.figure(figsize=(4, 4))
+        plt.figure(figsize=(4, 4), dpi=dpi_param)
         plt.plot(fpr, tpr, label=f'ROC Curve (AUC = {auc:.2f})', color='blue')
         plt.plot([0, 1], [0, 1], linestyle='--', color='gray', label='Random Guess')
         plt.xlabel('False Positive Rate (FPR)')
         plt.ylabel('True Positive Rate (TPR)')
         plt.title('ROC Curve')
         plt.legend(loc='lower right')
+        if save:
+            plt.savefig('roc_' + filename, dpi=dpi_param, bbox_inches='tight')
         plt.show()

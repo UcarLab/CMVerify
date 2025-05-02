@@ -20,7 +20,34 @@ def load_models(verbose):
     return rf_best_model, scaler
 
 def predict(adata,donor_obs_column, longitudinal_obs_column=None, verbose = 1,return_frac=False, true_status=None):
-    """Normalize to 10k, apply log1p, load the models, annotate and predict."""
+    """
+    Predicts donor classification from an AnnData object using pre-trained models.
+    
+    This function performs the following steps:
+    1. Normalizes expression data to 10,000 counts per cell.
+    2. Applies log1p transformation if not already applied.
+    3. Loads the appropriate model(s) for prediction.
+    4. Annotates the AnnData object with predicted donor-level outcomes.
+    
+    Parameters:
+    - adata : AnnData
+        Single-cell AnnData object containing expression data in `.X` and metadata in `.obs`.
+    - donor_obs_column : str
+        Column name in `adata.obs` that uniquely identifies each donor (used for aggregation).
+    - longitudinal_obs_column : str, optional
+        Column name in `adata.obs` indicating longitudinal timepoints for donors, if applicable.
+    - verbose : int, default=1
+        Verbosity level. Set to 0 for silent mode.
+    - return_frac : bool, default=False
+        Whether to return the fraction of predictive cell types used for classification.
+    - true_status : str or None, default=None
+        Optional ground truth donor status column name for evaluation or model validation.
+
+    Returns:
+    - AnnData
+        The input AnnData object with added predictions in `adata.obs` or `adata.uns`.
+        If `return_frac` is True, also returns a DataFrame with the fractions of predictive cell types.
+    """
     # Confirm required parameters
     if donor_obs_column not in adata.obs.columns:
         raise ValueError(f"{donor_obs_column} is not a valid column in adata.obs.")

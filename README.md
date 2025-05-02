@@ -29,8 +29,11 @@ Requirements
 - `anndata`
 - `celltypist`
 - `ipython`
+- `scikit-learn`
+- `joblib`
 
 These dependencies are automatically installed when you install CMVerify.
+[For R users please refer to this vignette for converting from Seurat to Anndata](https://mojaveazure.github.io/seurat-disk/articles/convert-anndata.html)
 
 Usage
 -----
@@ -47,7 +50,7 @@ To use CMVerify, start by importing the necessary module in your Python script:
 
 Before running predictions, ensure your data is prepared correctly. CMVerify requires **raw counts** for accurate predictions.
 
-#### Converting `.raw` to `.X`:
+#### If raw counts are in `.raw`, convert `.raw` to `.X`:
 
 You can convert your AnnData object from `.raw` to `.X` as follows:
 
@@ -56,7 +59,7 @@ You can convert your AnnData object from `.raw` to `.X` as follows:
     # Read the .h5ad file containing the raw data
     adata_pre = sc.read_h5ad('path_to_data.h5ad')
 
-    # Use the raw counts for analysis
+    # Use the raw counts for analysis (and retain metadata in .obs and .var)
     adata = sc.AnnData(X=adata_pre.raw.X, obs=adata_pre.obs, var=adata_pre.raw.var)
 
 This ensures that the data used for predictions is based on raw counts, which is essential for the analysis.
@@ -107,39 +110,34 @@ This will generate a figure connecting donor predictions across visits and mark 
 Functions
 ---------
 
-### `predict(adata, donor_obs_column, longitudinal_obs_column=None, verbose=1, return_frac=False)`
+### `predict(adata, donor_obs_column, longitudinal_obs_column=None, verbose=1, return_frac=False, true_status=None)`
 
-This is the main function used to predict CMV status. It performs the following steps:
-1. Normalizes the data to 10k reads per cell.
-2. Applies log1p transformation if needed.
-3. Annotates the data with the specified model.
-4. Calculates the cell type fractions per donor.
-5. Loads the models and scaler.
-6. Makes predictions based on the cell type fractions.
+This function predicts CMV status using pre-trained models on single-cell RNA-seq data. It normalizes, transforms, annotates, and calculates cell type fractions per donor before predicting CMV status.
 
 **Parameters**:
 - `adata`: An AnnData object containing your single-cell RNA-seq data.
 - `donor_obs_column`: The column in `adata.obs` that contains the donor ID.
 - `longitudinal_obs_column` (optional): The column in `adata.obs` for timepoints (e.g., for longitudinal data).
-- `verbose`: Set to 1 for progress messages.
-- `return_frac`: If `True`, returns the fractions DataFrame along with predictions.
+- `verbose` (optional): Verbosity level for progress messages. Default is 1 (show output), set to 0 to suppress.
+- `return_frac` (optional): If `True`, returns the fractions DataFrame along with predictions.
+- `true_status` (optional): The column in `adata.obs` for true donor serostatus (ground truth) for evaluation (default is None).
 
 **Returns**:
 - A list of dictionaries containing donor IDs, predictions, and probabilities (CMV status).
-- Optionally, the DataFrame of cell type fractions.
+- Optionally, the DataFrame of cell type fractions if `return_frac=True`.
 
-### `visualize(results, visit_order=None, figWidth=8, figHeight=3, dpi_param=100, save=False, filename='cmverify_viz.png', show=True)`
+### `visualize(results, visit_order=None, figWidth=8, figHeight=3, dpi_param=100, save=False, filename='cmverify_viz.png', metrics=False)`
 
 This function visualizes longitudinal CMV prediction probabilities per donor.
 
 **Parameters**:
-- `results`: A list of dictionaries with keys `'donor_id_timepoint'` (tuple) and `'probability'` (float).
-- `visit_order`: Optional list specifying the order of visit labels.
-- `figWidth`, `figHeight`: Figure dimensions in inches.
-- `dpi_param`: Dots-per-inch resolution for the plot.
-- `save`: Whether to save the plot as an image file.
-- `filename`: Output filename if saving.
-- `show`: Whether to display the plot.
+- `results`: A list of dictionaries with keys `'donor_id_timepoint'` (tuple), `'probability'` (float), and optionally `true_label`.
+- `visit_order` (optional): list specifying the order of visit labels.
+- `figWidth`, `figHeight` (optional): Figure dimensions in inches.
+- `dpi_param` (optional): Dots-per-inch resolution for the plot.
+- `save` (optional): Whether to save the plot as an image file.
+- `filename` (optional): Output filename if saving.
+- `metrics` (optional): If True, outputs additional metrics like confusion matrix, roc-curve.
 
 Model Training
 --------------
