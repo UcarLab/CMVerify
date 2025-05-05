@@ -7,11 +7,11 @@ CMVerify is a tool designed to predict Cytomegalovirus (CMV) serostatus based on
 Installation
 ------------
 
-To install CMVerify, you can use `pip`:
+To install CMVerify, you can use `pip` (currently in testing):
 
-    pip install cmverify
+     pip install -i https://test.pypi.org/simple/ CMVerify-LukeTrinity
 
-Alternatively, if you'd like to install the package from source:
+Alternatively, if you'd like to install the package from source, the repo will be made public upon publication:
 
     git clone https://github.com/luketrinityjax/CMVerify_v0.git
     cd CMVerify
@@ -37,6 +37,7 @@ These dependencies are automatically installed when you install CMVerify.
 R Users
 -------
 [For R users please refer to this vignette for converting from Seurat to Anndata](https://mojaveazure.github.io/seurat-disk/articles/convert-anndata.html)
+Further support for R users coming in version 2.
 
 Usage
 -----
@@ -108,13 +109,13 @@ print(fractions_df.head())
 
 #### 4b. Append Ground Truth CMV Status (Optional)
 
-If you have true CMV status in a separate metadata file (not in adata.obs), you can use the append_status function to match and append it to the prediction output.
+If you have true CMV status in a separate metadata file (not in adata.obs), you can use the append_status function to match and append it to the prediction output. This method supports dataframe with patient/cmv status column or dict input type (key=patient, value=CMV status).
 
 ```python
 from cmverify import append_status
 
 # Add true labels to predictions
-updated_predictions = append_status(results, cmv_metadata_df, patient_col='patientID', cmv_col='CMV')
+append_status(results, cmv_metadata_df, patient_col='patientID', cmv_col='CMV')
 ```
 
 
@@ -125,7 +126,7 @@ You can visualize longitudinal CMV prediction probabilities across timepoints us
 ```python
 from cmverify import visualize
 
-visualize(results, visit_order=['Baseline', 'Month3', 'Month6'], save=True, filename='example_filename.png')
+visualize(results)
 ```
 
 This will generate a figure connecting donor predictions across visits and mark the decision threshold.
@@ -134,7 +135,7 @@ You can also set `metrics=True` if you have ground truth CMV serostatus and wish
 Functions
 ---------
 
-### `predict(adata, donor_obs_column, longitudinal_obs_column=None, verbose=1, return_frac=False, true_status=None, norm=True)`
+### `predict(adata, donor_obs_column, longitudinal_obs_column=None, verbose=1, return_frac=False, true_status=None, norm=True, force_norm=False)`
 
 This function predicts CMV status using pre-trained models on single-cell RNA-seq data. It normalizes, transforms, annotates, and calculates cell type fractions per donor before predicting CMV status.
 
@@ -146,6 +147,7 @@ This function predicts CMV status using pre-trained models on single-cell RNA-se
 - `return_frac` (optional): If `True`, returns the fractions DataFrame along with predictions.
 - `true_status` (optional): The column in `adata.obs` for true donor serostatus (ground truth) for evaluation (default is None).
 - `norm` (optional): bool, default = True; if raw counts are unavailable, or an error occurs during execution, user may turn normalization off by setting norm = False
+- `force_norm` (optional): bool, default = False; if the adata has the log1p layer but has not been normalized, user may encounter error from celltypist annotation step. Set force_norm=True to force the normalization and resolve the issue.
 
 **Returns**:
 - A list of dictionaries containing donor IDs, predictions, and probabilities (CMV status).
@@ -164,7 +166,7 @@ This function visualizes longitudinal CMV prediction probabilities per donor.
 - `filename` (optional): Output filename if saving.
 - `metrics` (optional): If True, outputs additional metrics like confusion matrix, roc-curve.
 
-### `append_status(intermed_cmv_predictions, cmv_df, patient_col, cmv_col)`
+### `append_status(intermed_cmv_predictions, cmv_df, patient_col='patientID', cmv_col='CMV')`
 
 This utility function appends true CMV status to the intermediate prediction output by matching donor IDs with a reference CMV status DataFrame.
 Use this if you have CMV status but it is not in the adata.
@@ -172,11 +174,8 @@ Use this if you have CMV status but it is not in the adata.
 **Parameters**:
 - `intermed_cmv_predictions`: A list of dictionaries, each containing a `'donor_id_timepoint'` tuple as returned by `predict`.
 - `cmv_df` (DataFrame or dict): A `pandas.DataFrame` or dict containing CMV serostatus for each donor.
-- `patient_col`: The name of the column in `cmv_df` that contains donor/patient IDs.
-- `cmv_col`: The name of the column in `cmv_df` that contains CMV status values (e.g., 0 for negative, 1 for positive).
-
-**Returns**:
-- An updated list of dictionaries with a new key `'true_label'` representing the normalized CMV status for each donor. If a donor is not found in `cmv_df`, `'true_label'` is set to `None`.
+- `patient_col` (optional): The name of the column in `cmv_df` that contains donor/patient IDs.
+- `cmv_col` (optional): The name of the column in `cmv_df` that contains CMV status values (e.g., 0 for negative, 1 for positive).
 
 Model Training
 --------------

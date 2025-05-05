@@ -45,6 +45,8 @@ def predict(adata,donor_obs_column, longitudinal_obs_column=None, verbose = 1,re
         Optional ground truth donor status column name for evaluation or model validation.
     - norm : bool, default = True
         We highly encourage passing raw counts into this method, however, if raw counts are unavailable, or an error occurs during execution, user may turn normalization off by setting norm = False
+    - force_norm : bool, default = False
+        If the adata has the log1p layer but has not been normalized, user may encounter error from celltypist annotation step. Set force_norm=True to force the normalization and resolve the issue.
 
     Returns:
     - AnnData
