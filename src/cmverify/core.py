@@ -183,4 +183,3 @@ def append_status(intermed_cmv_predictions, cmv_df, patient_col='patientID', cmv
             print("Warning, there is a donor with no CMV status. Metrics may not run correctly.")
             # If no match is found, you can choose to add None or handle the error
             d['true_label'] = None
-    return intermed_cmv_predictions
