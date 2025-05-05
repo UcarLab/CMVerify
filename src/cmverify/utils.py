@@ -10,7 +10,7 @@ def normalize_total_10k(adata, verbose, force_norm):
     skip normalization to 10k reads per cell.
     """
     # Check if data is log-transformed
-    if "log1p" in adata.uns or !force_norm:
+    if "log1p" in adata.uns and not force_norm:
         # Skip normalization if already log-transformed
         print("WARNING! Data looks to be already log-transformed (log1p layer detected in adata.uns). Skipping normalization to 10k reads per cell. Double check your pipeline.", flush=True)
     elif adata.X is not None:
@@ -21,7 +21,6 @@ def normalize_total_10k(adata, verbose, force_norm):
     else:
         # If .X is not available, raise an error
         raise ValueError("No expression data (.X) found in the AnnData object.")
-
 
 def log1p_if_needed(adata, verbose, force_norm):
     """
@@ -35,7 +34,6 @@ def log1p_if_needed(adata, verbose, force_norm):
         sc.pp.log1p(adata)
     else:
         print("Data looks to be already log-transformed (log1p layer detected in adata.uns), skipping log1p.", flush=True)
-
 
 def normalize_cmv(value):
     """Convert CMV labels to binary format (0 = negative, 1 = positive)."""
