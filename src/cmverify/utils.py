@@ -2,7 +2,7 @@
 import scanpy as sc
 import pandas as pd
 
-def normalize_total_10k(adata, verbose):
+def normalize_total_10k(adata, verbose, force_norm):
     """
     Normalize the data in `adata.X` to a total count of 10,000 reads per cell.
     This function assumes that `adata.X` contains the raw counts (no `.raw` check).
@@ -10,7 +10,7 @@ def normalize_total_10k(adata, verbose):
     skip normalization to 10k reads per cell.
     """
     # Check if data is log-transformed
-    if "log1p" in adata.uns:
+    if "log1p" in adata.uns or !force_norm:
         # Skip normalization if already log-transformed
         print("WARNING! Data looks to be already log-transformed (log1p layer detected in adata.uns). Skipping normalization to 10k reads per cell. Double check your pipeline.", flush=True)
     elif adata.X is not None:
@@ -23,13 +23,13 @@ def normalize_total_10k(adata, verbose):
         raise ValueError("No expression data (.X) found in the AnnData object.")
 
 
-def log1p_if_needed(adata, verbose):
+def log1p_if_needed(adata, verbose, force_norm):
     """
     Apply log1p transformation to `adata.X` if not already log-transformed.
     The function assumes that log1p is applied if 'log1p' exists in `.uns`.
     If `.raw` is present, the log1p will be applied to `.raw` and not `.X`.
     """
-    if "log1p" not in adata.uns:
+    if "log1p" not in adata.uns or force_norm:
         if verbose == 1:
             print("Applying log1p transformation to the data.", flush=True)
         sc.pp.log1p(adata)

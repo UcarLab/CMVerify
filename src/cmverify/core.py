@@ -20,7 +20,7 @@ def load_models(verbose):
     # Return the models and scaler so they can be used in analysis
     return rf_best_model, scaler
 
-def predict(adata,donor_obs_column, longitudinal_obs_column=None, verbose = 1,return_frac=False, true_status=None, norm = True):
+def predict(adata,donor_obs_column, longitudinal_obs_column=None, verbose = 1,return_frac=False, true_status=None, norm = True, force_norm=False):
     """
     Predicts donor classification from an AnnData object using pre-trained models.
     
@@ -63,12 +63,12 @@ def predict(adata,donor_obs_column, longitudinal_obs_column=None, verbose = 1,re
         if verbose == 1:
             print("Checking if normalizing the data to 10k reads per cell is needed...", flush=True)
         # Normalize the data to 10k reads per cell
-        normalize_total_10k(adata,verbose)
+        normalize_total_10k(adata,verbose,force_norm)
        
         if verbose == 1:
             print("Checking if log1p transformation is necessary...", flush=True)
         # Apply log1p transformation if needed
-        log1p_if_needed(adata, verbose)
+        log1p_if_needed(adata, verbose,force_norm)
     else:
         print("User turned off normalization, data should already be normalized to 10k reads and log1p...", flush=True)
     
