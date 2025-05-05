@@ -118,7 +118,7 @@ updated_predictions = append_status(results, cmv_metadata_df, patient_col='patie
 ```
 
 
-### 5. Visualize Longitudinal Predictions
+### 5. Visualize Longitudinal Predictions (and optionally test the model with ground truth)
 
 You can visualize longitudinal CMV prediction probabilities across timepoints using the `visualize` function.
 
@@ -129,6 +129,7 @@ visualize(results, visit_order=['Baseline', 'Month3', 'Month6'], save=True, file
 ```
 
 This will generate a figure connecting donor predictions across visits and mark the decision threshold.
+You can also set `metrics=True` if you have ground truth CMV serostatus and wish to evaluate this model.
 
 Functions
 ---------
