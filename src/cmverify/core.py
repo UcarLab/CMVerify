@@ -148,15 +148,15 @@ def predict(adata,donor_obs_column, longitudinal_obs_column=None, verbose = 1,re
     else:
         return results
 
-def append_status(intermed_cmv_predictions, cmv_df, patient_col, cmv_col):
+def append_status(intermed_cmv_predictions, cmv_df, patient_col='patientID', cmv_col='CMV'):
     """
     Appends normalized CMV status to intermed_cmv_predictions list of dictionaries.
 
     Parameters:
     - intermed_cmv_predictions (list of dict): List of dictionaries, each containing 'donor_id_timepoint'.
     - cmv_df (DataFrame or dict): DataFrame or dictionary containing 'patientID' and 'CMV' columns.
-    - patient_col (str): Name of the column in cmv_df that contains donor ID.
-    - cmv_col (str): Name of the column in cmv_df that contains CMV status.
+    - patient_col (str, optional): Column in cmv_df with donor ID. Default: 'patientID'.
+    - cmv_col (str, optional): Column in cmv_df with CMV status. Default: 'CMV'.
 
     Returns:
     - None: The function updates intermed_cmv_predictions in place.
@@ -164,13 +164,15 @@ def append_status(intermed_cmv_predictions, cmv_df, patient_col, cmv_col):
     # Check if cmv_df is a dictionary
     if isinstance(cmv_df, dict):
         # Convert the dictionary to a DataFrame
-        cmv_df = pd.DataFrame(list(cmv_df.items()), columns=['key', 'value'])
-        cmv_df.columns = [patient_col, cmv_col]  # Rename columns to match expected structure
+        cmv_df = pd.DataFrame(list(cmv_df.items()), columns=[patient_col, cmv_col])
+
+    # Cast donor IDs in DataFrame to string for reliable comparison
+    cmv_df[patient_col] = cmv_df[patient_col].astype(str)
     
     # Loop through each dictionary in the predictions list
     for d in intermed_cmv_predictions:
         # Extract the donor_id from the dictionary (first item in donor_id_timepoint tuple)
-        donor_id = d['donor_id_timepoint'][0]
+        donor_id = str(d['donor_id_timepoint'][0])
         
         # Look up the CMV value from the DataFrame based on the donor_id (patientID)
         cmv_value = cmv_df.loc[cmv_df[patient_col] == donor_id, cmv_col].values

@@ -47,4 +47,5 @@ def normalize_cmv(value):
     elif value_str in {'0', '0.0', 'neg', 'negative','n'}:
         return 0
     else:
+        print(f"Unrecognized CMV label: '{value}'. Expected values are variants of [0, 1, 'pos', 'neg'].")
         return None  # Or raise an error if strict
