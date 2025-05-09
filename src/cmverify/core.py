@@ -75,6 +75,9 @@ def predict(adata,donor_obs_column, longitudinal_obs_column=None, verbose = 1,re
         log1p_if_needed(adata, verbose,force_norm)
     else:
         print("User turned off normalization, data should already be normalized to 10k reads and log1p...", flush=True)
+        # provide some info (best guess) if the data is log already)
+        is_log, min_val, max_val = is_log1p_transformed(adata)
+        print(f"Log1p-transformed: {is_log} (min={min_val}, max={max_val})")
     
     model_name = 'AIFI_L3'
     if verbose == 1:
