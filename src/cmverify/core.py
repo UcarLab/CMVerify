@@ -2,6 +2,7 @@
 from .utils import normalize_total_10k, log1p_if_needed, normalize_cmv
 from .annotation import annotate_with_model, check_and_add_labels, calculate_cell_type_fractions
 from .models import load_model
+from .config import EXPECTED_COLUMNS
 import pandas as pd
 import numpy as np
 try:
@@ -81,7 +82,6 @@ def predict(adata,donor_obs_column, longitudinal_obs_column=None, verbose = 1,re
     # Annotate the data using the loaded model
     label_results = annotate_with_model(adata, model_name)
 
-    
     if verbose == 1:
         print(f"Checking label summary for {model_name}...", flush=True)
     # Check and add labels, and print the summary
@@ -97,6 +97,7 @@ def predict(adata,donor_obs_column, longitudinal_obs_column=None, verbose = 1,re
         print(f"Displaying first 5 rows of donor level peripheral blood mononuclear cell composition:", flush=True)
         display(fractions_df.head().style.hide(axis='index'))
 
+    ### end annotate, begin predict
     # Load models and scaler
     rf_best_model, scaler = load_models(verbose)
 
@@ -132,7 +133,7 @@ def predict(adata,donor_obs_column, longitudinal_obs_column=None, verbose = 1,re
 
     if true_status is not None:
         if verbose:
-            print("Standardizing CMV labels", flush=True)
+            print("Getting true status from adata and standardizing CMV labels", flush=True)
         # Create the CMV dictionary
         df = adata.obs[[donor_obs_column, true_status]].copy()
         df['cmv'] = df[true_status].apply(normalize_cmv)
@@ -150,6 +151,85 @@ def predict(adata,donor_obs_column, longitudinal_obs_column=None, verbose = 1,re
         return results, fractions_df
     else:
         return results
+
+def predict_from_frac(fractions_df, verbose = 1):
+    """
+    Predicts donor classification (e.g., CMV status) from precomputed cell type fractions.
+
+    This function is useful when you already have a DataFrame of per-donor (or per-donor-timepoint) 
+    cell type fractions and want to apply a pre-trained model to get classification predictions 
+    and probabilities.
+
+    Parameters:
+    - fractions_df : pd.DataFrame
+        A DataFrame where rows correspond to donors (or donor-timepoint pairs) and columns are 
+        cell type fractions. The last column must be the donor ID or a tuple identifier.
+
+    Returns:
+    - List[dict]
+        A list of dictionaries containing donor IDs, predicted labels, and predicted probabilities.
+    """
+    # Extract and save the last column
+    donor_ids_timepoints = fractions_df.iloc[:, -1]
+    
+    # Drop the last column
+    fractions_df_clean = fractions_df.iloc[:, :-1]
+
+    #### from .annotation
+    # Ensure that all expected columns exist in the fractions dataframe.
+    # If any columns are missing, they will be initialized with zeroes.
+    existing_columns = fractions_df_clean.columns.tolist()
+    missing_columns = []
+
+    # Iterate over the expected columns and add missing ones with zeroes
+    for column in EXPECTED_COLUMNS:
+        if column not in existing_columns:
+            fractions_df_clean[column] = 0
+            missing_columns.append(column)
+            
+    # If there are missing columns, issue a warning
+    if missing_columns:
+        print(f"Note: the following cell types were not detected and have been initialized with zeroes: {', '.join(missing_columns)}", flush=True)
+        print("Typically this occurs when using the model with fewer cells or sequencing at lower depth. Results may or may not be affected.", flush=True)
+
+    # Ensure the columns are in the expected order
+    fractions_df_clean = fractions_df_clean[EXPECTED_COLUMNS]
+    fractions_df_clean.index.name = None
+    ##### end from .annotation
+
+    
+    #### start from predict
+    # Load pre-trained random forest model and corresponding scaler
+    rf_best_model, scaler = load_models(verbose)
+
+    if verbose == 1:
+        print("Scaling the fractions...", flush=True)
+    # Scale the fractions data using the pre-loaded scaler
+    fractions_df_scaled = scaler.transform(fractions_df_clean)
+    
+    if verbose == 1:
+        print("Making predictions using the CMVerify model...", flush=True)
+    # Get the predictions (CMV status)
+    cmv_pred = rf_best_model.predict(fractions_df_scaled)
+
+    if verbose == 1:
+        print("Getting predicted probabilities for CMV status...", flush=True)
+    # Get the predicted probabilities for CMV status
+    cmv_pred_probs = np.round(rf_best_model.predict_proba(fractions_df_scaled)[:, 1],2)  # Probability of the positive class
+    
+    # Combine the donor ID, prediction, and probability into a list of dictionaries
+    results = []
+    for donor_id_tp, pred, prob in zip(donor_ids_timepoints, cmv_pred, cmv_pred_probs):
+        results.append({
+            'donor_id_timepoint': donor_id_tp,
+            'prediction': pred,
+            'probability': round(prob,3)
+        })
+    if verbose:
+        print("Outputting predictions", flush=True)
+        print(results)
+        print("All done. Thank you!", flush=True)
+    return results
 
 def append_status(intermed_cmv_predictions, cmv_df, patient_col='patientID', cmv_col='CMV'):
     """
