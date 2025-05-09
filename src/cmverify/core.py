@@ -3,6 +3,7 @@ from .utils import normalize_total_10k, log1p_if_needed, normalize_cmv
 from .annotation import annotate_with_model, check_and_add_labels, calculate_cell_type_fractions
 from .models import load_model
 import pandas as pd
+import numpy as np
 try:
     from IPython.display import display  # Try importing display for Jupyter environments
 except ImportError:
@@ -112,7 +113,7 @@ def predict(adata,donor_obs_column, longitudinal_obs_column=None, verbose = 1,re
     if verbose == 1:
         print("Getting predicted probabilities for CMV status...", flush=True)
     # Get the predicted probabilities for CMV status
-    cmv_pred_probs = rf_best_model.predict_proba(fractions_df_scaled)[:, 1]  # Probability of the positive class
+    cmv_pred_probs = np.round(rf_best_model.predict_proba(fractions_df_scaled)[:, 1],2)  # Probability of the positive class
     
     # Combine the donor ID, prediction, and probability into a list of dictionaries
     results = []
