@@ -1,5 +1,5 @@
 # src/CMVerify/core.py
-from .utils import normalize_total_10k, log1p_if_needed, normalize_cmv
+from .utils import normalize_total_10k, log1p_if_needed, normalize_cmv, is_log1p_transformed
 from .annotation import annotate_with_model, check_and_add_labels, calculate_cell_type_fractions, check_for_missing_columns
 from .models import load_model
 from .config import EXPECTED_COLUMNS

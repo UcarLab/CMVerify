@@ -36,24 +36,24 @@ def test_normalize_total_10k():
     when not log-transformed, and no normalization is performed when data is already log-transformed.
     """
     # Case 1: Data is not log-transformed, normalize .X to 10k reads per cell
-    adata = create_adata(np.random.rand(5, 3))  # Create random data
-    normalize_total_10k(adata, verbose=1)
+    adata = create_adata(np.random.randint(low=0, high=250, size=(5, 3)))  # Create random data
+    normalize_total_10k(adata, verbose=1,force_norm=False)
     assert np.allclose(adata.X.sum(axis=1), 1e4), "Normalization to 10k failed"  # Check that total is normalized to 10k
     
     # Case 2: Data is already log-transformed, skip normalization
-    adata = create_adata(np.random.rand(5, 3), log1p=True)  # Simulate log-transformed data
-    normalize_total_10k(adata, verbose = 1)
+    adata = create_adata(np.random.randint(low=0, high=250, size=(5, 3)), log1p=True)  # Simulate log-transformed data
+    normalize_total_10k(adata, verbose = 1,force_norm=False)
     assert np.allclose(adata.X.sum(axis=1), np.sum(adata.X, axis=1)), "Normalization was incorrectly applied"  # Check normalization was skipped
     
     # Case 3: No raw data, normalize .X
-    adata = create_adata(np.random.rand(5, 3))  # Create random data
-    normalize_total_10k(adata, verbose=1)
+    adata = create_adata(np.random.randint(low=0, high=250, size=(5, 3)))  # Create random data
+    normalize_total_10k(adata, verbose=1,force_norm=False)
     assert np.allclose(adata.X.sum(axis=1), 1e4), "Normalization to 10k failed"  # Check that total is normalized to 10k
 
     # Case 4: No .X data, should raise ValueError
     adata = anndata.AnnData()  # Empty AnnData with no data
     with pytest.raises(ValueError):
-        normalize_total_10k(adata, verbose = 1)
+        normalize_total_10k(adata, verbose = 1,force_norm=False)
 
 # Test for log1p_if_needed function
 def test_log1p_if_needed():
@@ -62,15 +62,15 @@ def test_log1p_if_needed():
     If the data is already log-transformed, no transformation is applied.
     """
     # Case 1: Data is not log-transformed
-    adata = create_adata(np.random.rand(5, 3))
+    adata = create_adata(np.random.randint(low=0, high=250, size=(5, 3)))
     
-    log1p_if_needed(adata, verbose=1)
+    log1p_if_needed(adata, verbose=1,force_norm=False)
     assert "log1p" in adata.uns  # Check that the log1p key is added
 
     # Case 2: Data is already log-transformed
-    adata = create_adata(np.random.rand(5, 3), log1p=True)
+    adata = create_adata(np.random.randint(low=0, high=250, size=(5, 3)), log1p=True)
     
-    log1p_if_needed(adata, verbose =1)
+    log1p_if_needed(adata, verbose =1,force_norm=False)
     assert "log1p" in adata.uns  # log1p should still be there and should skip transformation
 
 def test_load_model_valid():

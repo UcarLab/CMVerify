@@ -2,11 +2,10 @@ anndata==0.11.4
 celltypist==1.6.3
 ipython==8.12.3
 joblib==1.4.2
-matplotlib==3.10.1
+matplotlib==3.10.3
 numpy==2.2.5
 pandas==1.5.3
 pytest==8.3.5
 scanpy==1.11.1
+scikit_learn==1.6.1
 seaborn==0.13.2
-setuptools==72.1.0
-setuptools==75.3.0
