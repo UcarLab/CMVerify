@@ -90,43 +90,17 @@ def predict(adata,donor_obs_column, longitudinal_obs_column=None, verbose = 1,re
     if verbose == 1:
         print(f"Calculating the fraction of cells for each label per donor...", flush=True)
     # Calculate the fraction of cells for each label per patient (person)
-    fractions_df, donor_ids = calculate_cell_type_fractions(adata, model_name, donor_obs_column, longitudinal_obs_column, verbose)
+    fractions_df, donor_ids_timepoints = calculate_cell_type_fractions(adata, model_name, donor_obs_column, longitudinal_obs_column, verbose)
 
     # Display the calculated fractions
     if verbose == 1:
         print(f"Displaying first 5 rows of donor level peripheral blood mononuclear cell composition:", flush=True)
         display(fractions_df.head().style.hide(axis='index'))
 
-    ### end annotate, begin predict
-    # Load models and scaler
-    rf_best_model, scaler = load_models(verbose)
-
-    if verbose == 1:
-        print("Scaling the calculated fractions...", flush=True)
-    # Scale the fractions data using the pre-loaded scaler
-    fractions_df_scaled = scaler.transform(fractions_df)
-    
-    if verbose == 1:
-        print("Making predictions using the CMVerify model...", flush=True)
-    # Get the predictions (CMV status)
-    cmv_pred = rf_best_model.predict(fractions_df_scaled)
-
-    if verbose == 1:
-        print("Getting predicted probabilities for CMV status...", flush=True)
-    # Get the predicted probabilities for CMV status
-    cmv_pred_probs = np.round(rf_best_model.predict_proba(fractions_df_scaled)[:, 1],2)  # Probability of the positive class
-    
-    # Combine the donor ID, prediction, and probability into a list of dictionaries
-    results = []
-    for donor_id, pred, prob in zip(donor_ids, cmv_pred, cmv_pred_probs):
-        results.append({
-            'donor_id_timepoint': donor_id,
-            'prediction': pred,
-            'probability': round(prob,3)
-        })
+    results = predict_from_model(fractions_df, donor_ids_timepoints, verbose)
 
     # Return fractions df as well, with donor_id_timepoint, pred and prob
-    fractions_df["donor_id_timepoint"] = donor_ids
+    fractions_df["donor_id_timepoint"] = donor_ids_timepoints
     
     # Reorder columns
     cols = ["donor_id_timepoint"] + [col for col in fractions_df.columns if col not in ["donor_id_timepoint"]]
@@ -177,14 +151,45 @@ def predict_from_frac(fractions_df, verbose = 1):
 
     fractions_df_clean = check_for_missing_columns(fractions_df_clean)
     
-    #### start from predict
+    results = predict_from_model(fractions_df_clean, donor_ids_timepoints, verbose)
+    
+    if verbose:
+        print("Outputting predictions", flush=True)
+        print(results)
+        print("All done. Thank you!", flush=True)
+    return results
+
+def predict_from_model(fractions_df, donor_ids_timepoints, verbose):
+    """
+    Predicts CMV status using a pre-trained random forest model.
+
+    This function takes in a dataframe of cell type fractions and a list of donor ID/timepoint identifiers,
+    scales the input using a pre-loaded scaler, and applies a pre-trained random forest model to predict 
+    CMV status. It returns predictions and associated probabilities for each donor-timepoint pair.
+
+    Parameters
+    ----------
+    fractions_df : pandas.DataFrame
+        DataFrame containing immune cell type fractions per donor-timepoint.
+    
+    donor_ids_timepoints : list of str
+        List of donor IDs with associated timepoints, matching the rows in `fractions_df`.
+
+    Returns
+    -------
+    list of dict
+        A list where each element is a dictionary containing:
+        - 'donor_id_timepoint': the donor-timepoint identifier
+        - 'prediction': predicted CMV status (0 or 1)
+        - 'probability': predicted probability of CMV-positive (rounded to 3 decimals)
+    """
     # Load pre-trained random forest model and corresponding scaler
     rf_best_model, scaler = load_models(verbose)
 
     if verbose == 1:
         print("Scaling the fractions...", flush=True)
     # Scale the fractions data using the pre-loaded scaler
-    fractions_df_scaled = scaler.transform(fractions_df_clean)
+    fractions_df_scaled = scaler.transform(fractions_df)
     
     if verbose == 1:
         print("Making predictions using the CMVerify model...", flush=True)
@@ -204,11 +209,8 @@ def predict_from_frac(fractions_df, verbose = 1):
             'prediction': pred,
             'probability': round(prob,3)
         })
-    if verbose:
-        print("Outputting predictions", flush=True)
-        print(results)
-        print("All done. Thank you!", flush=True)
     return results
+    
 
 def append_status(intermed_cmv_predictions, cmv_df, patient_col='patientID', cmv_col='CMV'):
     """
