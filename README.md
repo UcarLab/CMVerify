@@ -70,7 +70,7 @@ adata_pre = sc.read_h5ad('path_to_data.h5ad')
 adata = sc.AnnData(X=adata_pre.raw.X, obs=adata_pre.obs, var=adata_pre.raw.var)
 ```
 
-This ensures that the data used for predictions is based on raw counts, which is essential for the analysis.
+Please ensure that the data used for predictions is based on raw counts, which is essential for the analysis.
 
 ### 3. Making Predictions
 
@@ -109,13 +109,13 @@ print(fractions_df.head())
 
 #### 4b. Append Ground Truth CMV Status (Optional)
 
-If you have true CMV status in a separate metadata file (not in adata.obs), you can use the append_status function to match and append it to the prediction output. This method supports dataframe with patient/cmv status column or dict input type (key=patient, value=CMV status).
+If you have true CMV status in a separate metadata file (not in `adata.obs`), you can use the append_status function to match and append it to the prediction output. This method supports dataframe with patient/cmv status column or dict input type (key=patient, value=CMV status).
 
 ```python
 from cmverify import append_status
 
 # Add true labels to predictions
-append_status(results, cmv_metadata_df, patient_col='patientID', cmv_col='CMV')
+append_status(results, cmv_metadata)
 ```
 
 
@@ -137,34 +137,46 @@ Functions
 
 ### `predict(adata, donor_obs_column, longitudinal_obs_column=None, verbose=1, return_frac=False, true_status=None, norm=True, force_norm=False)`
 
-This function predicts CMV status using pre-trained models on single-cell RNA-seq data. It normalizes, transforms, annotates, and calculates cell type fractions per donor before predicting CMV status.
+Predict CMV serostatus from single-cell RNA-seq data using CMVerify. This function handles normalization, transformation, annotation, cell type fraction calculation, and model inference.
 
 **Parameters**:
-- `adata`: An AnnData object containing your single-cell RNA-seq data.
-- `donor_obs_column`: The column in `adata.obs` that contains the donor ID.
-- `longitudinal_obs_column` (optional): The column in `adata.obs` for timepoints (e.g., for longitudinal data).
-- `verbose` (optional): Verbosity level for progress messages. Default is 1 (show output), set to 0 to suppress.
-- `return_frac` (optional): If `True`, returns the fractions DataFrame along with predictions.
-- `true_status` (optional): The column in `adata.obs` for true donor serostatus (ground truth) for evaluation (default is None).
-- `norm` (optional): bool, default = True; if raw counts are unavailable, or an error occurs during execution, user may turn normalization off by setting norm = False
-- `force_norm` (optional): bool, default = False; if the adata has the log1p layer but has not been normalized, user may encounter error from celltypist annotation step. Set force_norm=True to force the normalization and resolve the issue.
+- `adata` (`AnnData`): Single-cell RNA-seq data object.
+- `donor_obs_column` (`str`): The column in `adata.obs` that contains the donor or sample identifiers.
+- `longitudinal_obs_column` (`str`, optional): Column in `adata.obs` for timepoint or longitudinal visit labels, if applicable. Default is `None`.
+- `verbose` (`int`, optional): Verbosity level for progress messages. (0 = silent, 1 = standard output). Default is 1.
+- `return_frac` (`bool`, optional): If `True`, return the cell type fraction `DataFrame` along with predictions. Default is `False`.
+- `true_status` (`str`, optional): Column in `adata.obs` for true donor serostatus (ground truth) for evaluation. Default is `None`.
+- `norm` (`bool`, optional): Whether to normalize to 10,000 counts per cell and log1p-transform. Disable only if raw counts are in `adata.X`. Default is `True`.
+- `force_norm` (`bool`, optional): If the adata has the log1p layer but has not been normalized, user may encounter error from celltypist annotation step. Set `force_norm=True` to force the normalization and resolve the issue. Default is False.
 
 **Returns**:
-- A list of dictionaries containing donor IDs, predictions, and probabilities (CMV status).
-- Optionally, the DataFrame of cell type fractions if `return_frac=True`.
+- `List[Dict]`: List of dictionaries containing donor ID, timepoint (if applicable), predicted label, and probability of CMV seropositivity from CMVerify.
+- If `return_frac=True`, also returns a DataFrame with  cell type fractions and donor_id-timepoint metadata.
+
+### `predict_from_frac(fractions_df, verbose=1)`
+
+Apply CMVerify to a precomputed DataFrame of cell type fractions.
+
+**Parameters**:
+- `fractions_df` (`DataFrame`): A DataFrame where rows are donor-timepoints and columns are cell type fractions. The last column must contain the donor-timepoint info as a tuple (`donor_id`,`timepoint`).
+- `verbose` (`int`, optional): Verbosity level for progress messages. (0 = silent, 1 = standard output). Default is 1.
+
+**Returns**:
+- `List[Dict]`: List of dictionaries containing donor ID, timepoint (if applicable), predicted label, and probability of CMV seropositivity from CMVerify.
+
 
 ### `visualize(results, visit_order=None, figWidth=8, figHeight=3, dpi_param=100, save=False, filename='cmverify_viz.png', metrics=False)`
 
-This function visualizes longitudinal CMV prediction probabilities per donor.
+This function visualizes CMV prediction probabilities per donor, and if applicable for each timepoint.
 
 **Parameters**:
-- `results`: A list of dictionaries with keys `'donor_id_timepoint'` (tuple), `'probability'` (float), and optionally `true_label`.
-- `visit_order` (optional): list specifying the order of visit labels.
-- `figWidth`, `figHeight` (optional): Figure dimensions in inches.
-- `dpi_param` (optional): Dots-per-inch resolution for the plot.
-- `save` (optional): Whether to save the plot as an image file.
-- `filename` (optional): Output filename if saving.
-- `metrics` (optional): If True, outputs additional metrics like confusion matrix, roc-curve.
+- `results` (`List[Dict]`): A list of dictionaries with keys `'donor_id_timepoint'`, i.e., tuple: (`donor_id`,`timepoint`), `'probability'` (`float`), and optionally `true_label`.
+- `visit_order` (`List[str]`, optional): List specifying the order of visit labels (e.g., `["Baseline", "Visit 1", "Visit 2"]`). Default is `None`.
+- `figWidth`, `figHeight` (`float`, optional): Figure dimensions in inches. Default is 8 x 3.
+- `dpi_param` (`int`, optional): Dots-per-inch resolution for the plot. Default is 100.
+- `save` (`bool`, optional): If `True`, saves the plot as an image file. Default is `False`.
+- `filename` (`str`, optional): Output filename if saving. Default is ending with `cmverify_viz.png` (multiple figures will be generated with different prefix).
+- `metrics` (`bool`, optional): If `True`, outputs additional metrics like confusion matrix, roc-curve (requires `true_label` in results). Default is `False`.
 
 ### `append_status(intermed_cmv_predictions, cmv_df, patient_col='patientID', cmv_col='CMV')`
 
@@ -172,10 +184,13 @@ This utility function appends true CMV status to the intermediate prediction out
 Use this if you have CMV status but it is not in the adata.
 
 **Parameters**:
-- `intermed_cmv_predictions`: A list of dictionaries, each containing a `'donor_id_timepoint'` tuple as returned by `predict`.
-- `cmv_df` (DataFrame or dict): A `pandas.DataFrame` or dict containing CMV serostatus for each donor.
-- `patient_col` (optional): The name of the column in `cmv_df` that contains donor/patient IDs.
-- `cmv_col` (optional): The name of the column in `cmv_df` that contains CMV status values (e.g., 0 for negative, 1 for positive).
+- `intermed_cmv_predictions` (`List[Dict]`): Output from `predict`, contains `'donor_id_timepoint'` (tuple).
+- `cmv_df` (`DataFrame` or `dict`): A `pandas.DataFrame` or dict containing known CMV serostatus for each donor.
+- `patient_col` (`str`, optional): The name of the column in `cmv_df` that contains donor/patient IDs.
+- `cmv_col` (`str`, optional): The name of the column in `cmv_df` that contains CMV status values (e.g., 0 for negative, 1 for positive).
+
+**Returns**:
+- Updates intermediate predictions in place with new key `true_label` added to each dictionary entry.
 
 Model Training
 --------------
