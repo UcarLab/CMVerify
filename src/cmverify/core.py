@@ -1,6 +1,6 @@
 # src/CMVerify/core.py
 from .utils import normalize_total_10k, log1p_if_needed, normalize_cmv
-from .annotation import annotate_with_model, check_and_add_labels, calculate_cell_type_fractions
+from .annotation import annotate_with_model, check_and_add_labels, calculate_cell_type_fractions, check_for_missing_columns
 from .models import load_model
 from .config import EXPECTED_COLUMNS
 import pandas as pd
@@ -175,28 +175,7 @@ def predict_from_frac(fractions_df, verbose = 1):
     # Drop the last column
     fractions_df_clean = fractions_df.iloc[:, :-1]
 
-    #### from .annotation
-    # Ensure that all expected columns exist in the fractions dataframe.
-    # If any columns are missing, they will be initialized with zeroes.
-    existing_columns = fractions_df_clean.columns.tolist()
-    missing_columns = []
-
-    # Iterate over the expected columns and add missing ones with zeroes
-    for column in EXPECTED_COLUMNS:
-        if column not in existing_columns:
-            fractions_df_clean[column] = 0
-            missing_columns.append(column)
-            
-    # If there are missing columns, issue a warning
-    if missing_columns:
-        print(f"Note: the following cell types were not detected and have been initialized with zeroes: {', '.join(missing_columns)}", flush=True)
-        print("Typically this occurs when using the model with fewer cells or sequencing at lower depth. Results may or may not be affected.", flush=True)
-
-    # Ensure the columns are in the expected order
-    fractions_df_clean = fractions_df_clean[EXPECTED_COLUMNS]
-    fractions_df_clean.index.name = None
-    ##### end from .annotation
-
+    fractions_df_clean = check_for_missing_columns(fractions_df_clean)
     
     #### start from predict
     # Load pre-trained random forest model and corresponding scaler

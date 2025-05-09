@@ -146,7 +146,29 @@ def calculate_cell_type_fractions(adata, model_name, donor_obs_column, longitudi
     
     # Normalize the values to get fractions
     fractions_df = fractions_df.div(fractions_df.sum(axis=1), axis=0).reset_index()
+    # Check for missing columns
+    fractions_df = check_for_missing_columns(fractions_df)
+    # Return the calculated fractions
+    return fractions_df, donor_ids
 
+
+def check_for_missing_columns(fractions_df):
+    """
+    Ensures that all expected cell type columns are present in the input dataframe.
+    
+    If any expected columns are missing, they will be added and initialized with zeroes.
+    This typically happens with shallow sequencing or small input datasets.
+
+    Parameters:
+    -----------
+    fractions_df : pandas.DataFrame
+        A dataframe containing cell type fractions as columns.
+
+    Returns:
+    --------
+    pandas.DataFrame
+        The updated dataframe with all EXPECTED_COLUMNS present and in the correct order.
+    """
     # Ensure that all expected columns exist in the fractions dataframe.
     # If any columns are missing, they will be initialized with zeroes.
     existing_columns = fractions_df.columns.tolist()
@@ -166,5 +188,4 @@ def calculate_cell_type_fractions(adata, model_name, donor_obs_column, longitudi
     # Ensure the columns are in the expected order
     fractions_df = fractions_df[EXPECTED_COLUMNS]
     fractions_df.index.name = None
-    # Return the calculated fractions
-    return fractions_df, donor_ids
+    return fractions_df
