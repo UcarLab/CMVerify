@@ -7,13 +7,13 @@ CMVerify is a tool designed to predict Cytomegalovirus (CMV) serostatus based on
 Installation
 ------------
 
-To install CMVerify, you can use `pip` (currently in testing):
+To install CMVerify, you can use `pip`:
 
-     pip install -i https://test.pypi.org/simple/ CMVerify-LukeTrinity
+     pip install CMVerify
 
 Alternatively, if you'd like to install the package from source, the repo will be made public upon publication:
 
-    git clone https://github.com/luketrinityjax/CMVerify_v0.git
+    git clone https://github.com/UcarLab/CMVerify.git
     cd CMVerify
     pip install .
 
