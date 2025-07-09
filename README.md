@@ -4,6 +4,10 @@ CMVerify: CMV Serostatus Predictor
 CMVerify is a tool designed to predict Cytomegalovirus (CMV) serostatus based on single-cell RNA sequencing data. It uses a machine learning model to analyze blood transcriptomic data and provide predictions on CMV status. The tool is built to be easy to use, with automatic data preprocessing, model annotation, and prediction generation.
 - [Ucar Lab at The Jackson Laboratory](https://ucarlab.github.io/)
 
+Please cite
+-----------
+Grabauskas, T., Verschoor, C. P., Trinity, L., Marches, R., Thibodeau, A., Nehar-Belaid, D., Eryilmaz, G., Picard, E., Kuo, C.-L., Schmader, K. E., Colon-Emeric, C., Whitson, H. E., Paust, S., García-Sastre, A., Banchereau, J., Kuchel, G. A., & Ucar, D. (2025). *CMV reshapes lymphoid immunity in aging: a single-cell atlas with predictive modeling*. bioRxiv. https://doi.org/10.1101/2025.06.24.661167
+
 Installation
 ------------
 
