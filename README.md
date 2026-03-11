@@ -6,7 +6,7 @@ CMVerify is a tool designed to predict Cytomegalovirus (CMV) serostatus based on
 
 Please cite
 -----------
-Grabauskas, T., Verschoor, C. P., Trinity, L., Marches, R., Thibodeau, A., Nehar-Belaid, D., Eryilmaz, G., Picard, E., Kuo, C.-L., Schmader, K. E., Colon-Emeric, C., Whitson, H. E., Paust, S., García-Sastre, A., Banchereau, J., Kuchel, G. A., & Ucar, D. (2025). *CMV reshapes lymphoid immunity in aging: a single-cell atlas with predictive modeling*. bioRxiv. https://doi.org/10.1101/2025.06.24.661167
+Grabauskas, T., Trinity, L., Verschoor, C. P., Nehar-Belaid, D., Marches, R., Eryilmaz, G., Mahajan, A. S., Baarathi, S., Thibodeau, A., Picard, E., Kuo, C.-L., Schmader, K. E., Colon-Emeric, C., Whitson, H. E., Paust, S., García-Sastre, A., Yaari, G., Banchereau, J., Kuchel, G. A., & Ucar, D. (2025). *CMV-specific clonal expansion of Th1, GZMK⁺ CD8⁺, and TEMRA T cells revealed by human PBMC single cell profiling*. bioRxiv. https://doi.org/10.1101/2025.06.24.661167
 
 Installation
 ------------
