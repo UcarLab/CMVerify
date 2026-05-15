@@ -1,12 +1,15 @@
 CMVerify: CMV Serostatus Predictor
 ===================================
 
-CMVerify is a tool designed to predict Cytomegalovirus (CMV) serostatus based on single-cell RNA sequencing data. It uses a machine learning model to analyze blood transcriptomic data and provide predictions on CMV status. The tool is built to be easy to use, with automatic data preprocessing, model annotation, and prediction generation.
+[![DOI](https://zenodo.org/badge/1016779801.svg)](https://doi.org/10.5281/zenodo.20210782)
+
+CMVerify is a tool designed to predict Cytomegalovirus (CMV) serostatus based on single-cell RNA sequencing data. It uses a machine learning model to analyze blood transcriptomic data and provide predictions of CMV serostatus. The model was trained on the cohort from the Allen Institute and validated in independent aging cohorts.
+
 - [Ucar Lab at The Jackson Laboratory](https://ucarlab.github.io/)
 
 Please cite
 -----------
-Grabauskas, T., Trinity, L., Verschoor, C. P., Nehar-Belaid, D., Marches, R., Eryilmaz, G., Mahajan, A. S., Baarathi, S., Thibodeau, A., Picard, E., Kuo, C.-L., Schmader, K. E., Colon-Emeric, C., Whitson, H. E., Paust, S., García-Sastre, A., Yaari, G., Banchereau, J., Kuchel, G. A., & Ucar, D. (2025). *CMV-specific clonal expansion of Th1, GZMK⁺ CD8⁺, and TEMRA T cells revealed by human PBMC single cell profiling*. bioRxiv. https://doi.org/10.1101/2025.06.24.661167
+Grabauskas, T., Trinity, L., Verschoor, C. P., Nehar-Belaid, D., Marches, R., Eryilmaz, G., Mahajan, A. S., Baarathi, S., Thibodeau, A., Picard, E., Kuo, C.-L., Schmader, K. E., Colon-Emeric, C., Wang, C., Freemerman, A. J., McElhaney, J. E., Ucar, D. (2025). *Machine learning predicts cytomegalovirus serostatus from immune cell compositions of peripheral blood transcriptome*. Aging Cell. https://doi.org/10.1111/acel.70047
 
 Installation
 ------------
@@ -78,7 +81,7 @@ Please ensure that the data used for predictions is based on raw counts, which i
 
 ### 3. Making Predictions
 
-To make predictions, you need to load your single-cell RNA-seq data (`AnnData` object) and provide the relevant parameters. The `predict` function handles data normalization, model annotation, and CMV status prediction.
+To make predictions, you need to load your single-cell RNA-seq data (`AnnData` object) and provide the relevant parameters. The `predict` function handles data normalization, model annotation, and cell type fraction calculation.
 
 #### Example:
 
@@ -113,7 +116,7 @@ print(fractions_df.head())
 
 #### 4b. Append Ground Truth CMV Status (Optional)
 
-If you have true CMV status in a separate metadata file (not in `adata.obs`), you can use the append_status function to match and append it to the prediction output. This method supports dataframe with patient/cmv status column or dict input type (key=patient, value=CMV status).
+If you have true CMV status in a separate metadata file (not in `adata.obs`), you can use the append_status function to match and append it to the prediction output. This method supports dataframe or dictionary style input.
 
 ```python
 from cmverify import append_status
@@ -151,7 +154,7 @@ Predict CMV serostatus from single-cell RNA-seq data using CMVerify. This functi
 - `return_frac` (`bool`, optional): If `True`, return the cell type fraction `DataFrame` along with predictions. Default is `False`.
 - `true_status` (`str`, optional): Column in `adata.obs` for true donor serostatus (ground truth) for evaluation. Default is `None`.
 - `norm` (`bool`, optional): Whether to normalize to 10,000 counts per cell and log1p-transform. Disable only if raw counts are in `adata.X`. Default is `True`.
-- `force_norm` (`bool`, optional): If the adata has the log1p layer but has not been normalized, user may encounter error from celltypist annotation step. Set `force_norm=True` to force the normalization and resolve the issue. Default is False.
+- `force_norm` (`bool`, optional): If the adata has the log1p layer but has not been normalized, user may encounter error from celltypist annotation step. Set `force_norm=True` to force the normalization for safe downstream processing. Default is `False`.
 
 **Returns**:
 - `List[Dict]`: List of dictionaries containing donor ID, timepoint (if applicable), predicted label, and probability of CMV seropositivity from CMVerify.
@@ -162,7 +165,7 @@ Predict CMV serostatus from single-cell RNA-seq data using CMVerify. This functi
 Apply CMVerify to a precomputed DataFrame of cell type fractions.
 
 **Parameters**:
-- `fractions_df` (`DataFrame`): A DataFrame where rows are donor-timepoints and columns are cell type fractions. The last column must contain the donor-timepoint info as a tuple (`donor_id`,`timepoint`).
+- `fractions_df` (`DataFrame`): A DataFrame where rows are donor-timepoints and columns are cell type fractions. The last column must contain the donor-timepoint info as a tuple (`donor_id`,`timepoint`) or donor only if not longitudinal.
 - `verbose` (`int`, optional): Verbosity level for progress messages. (0 = silent, 1 = standard output). Default is 1.
 
 **Returns**:
@@ -199,9 +202,9 @@ Use this if you have CMV status but it is not in the adata.
 Model Training
 --------------
 
-CMVerify uses a random forest classifier (`rf_best_estimator`) and a corresponding scaler (`rf_scaler`). These models have been trained on relevant single-cell RNA-seq data and are used to predict CMV serostatus based on cell type composition.
+CMVerify uses a random forest classifier (`rf_best_estimator`) and a corresponding scaler (`rf_scaler`). These models have been trained on relevant single-cell RNA-seq data and are used to predict CMV serostatus from cell type fractions.
 
-Many thanks to the Allen Institute for sharing their cohort data and enhancing reproducibility in science. Below are some helpful links to their preprint, analysis pipeline, scRNA-seq data, and celltypist models.
+Many thanks to the Allen Institute for sharing their cohort data and enhancing reproducibility in science. Below are some helpful links to their preprint, analysis pipeline, scRNA-seq data, and code.
 
 - [Gong et al. 2024 preprint via bioRxiv](https://www.biorxiv.org/content/10.1101/2024.09.10.612119v1)
 - [Immune Health Atlas Analysis](https://apps.allenimmunology.org/aifi/resources/imm-health-atlas/analysis/)
